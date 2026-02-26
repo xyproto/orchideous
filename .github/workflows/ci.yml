@@ -4,19 +4,19 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - "*.md"
-      - "*.txt"
-      - "*.log"
-      - "*.png"
-      - "*.svg"
+      - "**/*.md"
+      - "**/*.txt"
+      - "**/*.log"
+      - "**/*.png"
+      - "**/*.svg"
   pull_request:
     branches: [main]
     paths-ignore:
-      - "*.md"
-      - "*.txt"
-      - "*.log"
-      - "*.png"
-      - "*.svg"
+      - "**/*.md"
+      - "**/*.txt"
+      - "**/*.log"
+      - "**/*.png"
+      - "**/*.svg"
 
 jobs:
   # ── Ubuntu (gcc + clang, full example builds) ──────────────────────
@@ -55,7 +55,10 @@ jobs:
             libvulkan-dev \
             libx11-dev \
             freeglut3-dev \
-            qt6-base-dev
+            qt6-base-dev \
+            libraylib-dev \
+            librtaudio-dev \
+            libreactphysics3d-dev
           if [ "${{ matrix.compiler }}" = "clang" ]; then
             sudo apt-get install -y clang
           else
@@ -73,6 +76,10 @@ jobs:
 
       - name: Smoke test (hello example)
         run: |
+          if [ "${{ matrix.compiler }}" = "clang" ]; then
+            export CXX=clang++
+            export CC=clang
+          fi
           ./oh -C examples/hello clean
           ./oh -C examples/hello build
           ./oh -C examples/hello test
@@ -80,17 +87,23 @@ jobs:
 
       - name: Build examples (best effort)
         run: |
+          if [ "${{ matrix.compiler }}" = "clang" ]; then
+            export CXX=clang++
+            export CC=clang
+          fi
           failed=""
           # Skip examples needing packages not in Ubuntu repos or with incompatible versions
-          skip="bisqwit entities raylib raylib5 reactphysics rtaudio sfml sfml_audio win64crate"
+          # SFML 3 is not yet in Ubuntu repos, so skip SFML-based examples
+          skip="bisqwit entities sfml sfml_audio win64crate"
           for d in examples/*/; do
             name=$(basename "$d")
             echo "$skip" | grep -qw "$name" && { printf "=== %-30s SKIP\n" "$d"; continue; }
             printf "=== %-30s" "$d"
-            if ./oh -C "$d" build > /dev/null 2>&1; then
+            if ./oh -C "$d" build > build.log 2>&1; then
               echo "OK"
             else
               echo "FAIL"
+              cat build.log
               failed="$failed $d"
             fi
           done
@@ -113,7 +126,7 @@ jobs:
             base-devel git go pkg-config \
             boost fcgi freeglut glew glfw glibmm glm glu \
             gtk4 libconfig libpipewire libx11 openal qt6-base \
-            raylib reactphysics3d rtaudio sdl2-compat sdl2_mixer \
+            raylib reactphysics3d rtaudio sdl2 sdl2_mixer \
             sfml vte4 vulkan-headers vulkan-icd-loader
 
       - uses: actions/checkout@v6
@@ -142,10 +155,11 @@ jobs:
             name=$(basename "$d")
             echo "$skip" | grep -qw "$name" && { printf "=== %-30s SKIP\n" "$d"; continue; }
             printf "=== %-30s" "$d"
-            if ./oh -C "$d" build > /dev/null 2>&1; then
+            if ./oh -C "$d" build > build.log 2>&1; then
               echo "OK"
             else
               echo "FAIL"
+              cat build.log
               failed="$failed $d"
             fi
           done
@@ -244,13 +258,14 @@ jobs:
       - uses: vmactions/openbsd-vm@v1
         with:
           prepare: |
-            pkg_add go
+            pkg_add go gcc pkgconf
           run: |
+            export CXX=eg++
             go build -v -o oh ./cmd/oh
             go vet ./...
             go test -v -count=1 ./...
             ./oh -C examples/hello clean
-            CXX=eg++ ./oh -C examples/hello build
+            ./oh -C examples/hello build
             ./oh -C examples/hello test
             ./oh -C examples/hello clean
 
