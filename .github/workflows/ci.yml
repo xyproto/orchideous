@@ -52,6 +52,7 @@ jobs:
             libsdl2-mixer-dev \
             libsfml-dev \
             libvte-2.91-gtk4-dev \
+            libvte-2.91-dev \
             libvulkan-dev \
             libx11-dev \
             freeglut3-dev \
@@ -64,7 +65,7 @@ jobs:
           fi
 
       - name: Build
-        run: go build -v -o oh ./cmd/oh
+        run: go build -v -buildvcs=false -o oh ./cmd/oh
 
       - name: Vet
         run: go vet ./...
@@ -133,7 +134,7 @@ jobs:
             sfml vte4 vulkan-headers vulkan-icd-loader
 
       - name: Build
-        run: go build -v -o oh ./cmd/oh
+        run: go build -v -buildvcs=false -o oh ./cmd/oh
 
       - name: Vet
         run: go vet ./...
@@ -184,7 +185,7 @@ jobs:
         run: brew install pkg-config
 
       - name: Build
-        run: go build -v -o oh ./cmd/oh
+        run: go build -v -buildvcs=false -o oh ./cmd/oh
 
       - name: Vet
         run: go vet ./...
@@ -219,7 +220,7 @@ jobs:
             mingw-w64-ucrt-x86_64-pkg-config
 
       - name: Build
-        run: go build -v -o oh.exe ./cmd/oh
+        run: go build -v -buildvcs=false -o oh.exe ./cmd/oh
 
       - name: Vet
         run: go vet ./...
@@ -243,7 +244,7 @@ jobs:
           prepare: |
             pkg install -y go pkgconf
           run: |
-            go build -v -o oh ./cmd/oh
+            go build -v -buildvcs=false -o oh ./cmd/oh
             go vet ./...
             go test -v -count=1 ./...
             ./oh -C examples/hello clean
@@ -263,7 +264,7 @@ jobs:
           run: |
             export CXX=eg++
             export CC=egcc
-            go build -v -o oh ./cmd/oh
+            go build -v -buildvcs=false -o oh ./cmd/oh
             go vet ./...
             go test -v -count=1 ./...
             ./oh -C examples/hello clean
@@ -281,7 +282,7 @@ jobs:
           prepare: |
             pkgin -y install go pkgconf
           run: |
-            go build -v -o oh ./cmd/oh
+            go build -v -buildvcs=false -o oh ./cmd/oh
             go vet ./...
             go test -v -count=1 ./...
             ./oh -C examples/hello clean
