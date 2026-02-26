@@ -347,4 +347,5 @@ Install g++ 11+ and build with `oh CXX=eg++`.
 ## General Info
 
 * License: BSD-3
+* Version: 1.0.0
 * Author: Alexander F. Rødseth &lt;xyproto@archlinux.org&gt;
