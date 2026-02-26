@@ -61,7 +61,8 @@ type Project struct {
 	DepSources    []string
 	TestSources   []string
 	Includes      []string // external includes from source files
-	IsC           bool     // true if main source is a .c file
+	BoostLibs     []string
+	IsC           bool // true if main source is a .c file
 	HasOpenMP     bool
 	HasBoost      bool
 	HasQt6        bool
@@ -71,7 +72,6 @@ type Project struct {
 	HasWin64      bool // detected from #include <windows.h>
 	HasGLFWVulkan bool // detected from #define GLFW_INCLUDE_VULKAN
 	HasDlopen     bool // detected from #include <dlfcn.h>
-	BoostLibs     []string
 }
 
 // detectProject scans the current directory to detect the project layout.

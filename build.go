@@ -11,6 +11,7 @@ import (
 
 // BuildOptions holds the configuration for a build.
 type BuildOptions struct {
+	InstallPrefix   string // If set, override dir defines with install paths
 	Debug           bool
 	Opt             bool
 	Strict          bool
@@ -23,7 +24,6 @@ type BuildOptions struct {
 	NoSanitizers    bool
 	ProfileGenerate bool
 	ProfileUse      bool
-	InstallPrefix   string // If set, override dir defines with install paths
 }
 
 // BuildFlags holds the assembled compiler and linker flags.
