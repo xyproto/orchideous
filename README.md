@@ -1,4 +1,4 @@
-# Orchideous
+## Orchideous <img src="img/orchideous.svg" width="128" align="right">
 
 ![Standard](https://img.shields.io/badge/C%2B%2B-20-blue.svg)
 [![CI](https://github.com/xyproto/orchideous/actions/workflows/ci.yml/badge.svg)](https://github.com/xyproto/orchideous/actions/workflows/ci.yml)
@@ -51,8 +51,8 @@ sudo make install    # use gmake on BSD
 Or with `go install`:
 
 ```sh
-go install github.com/xyproto/orchideous@latest
-sudo ln -sf ~/go/bin/orchideous /usr/local/bin/oh
+go install github.com/xyproto/orchideous/cmd/oh@latest
+sudo ln -sf ~/go/bin/oh /usr/local/bin/oh
 ```
 
 ## All Commands
@@ -240,7 +240,7 @@ Over 40 examples are included in the `examples/` directory:
 | **Basics** | `hello`, `args`, `lambda`, `defer`, `invoke`, `visit`, `async`, `designated`, `entities`, `validorder`, `findfiles`, `platforms`, `config` |
 | **Graphics** | `sfml`, `sfml_audio`, `bisqwit`, `sdl2`, `sdl2_opengl`, `gl4_spirv`, `gles2_glfw`, `gles3_glfw`, `gles3_sdl2`, `raylib`, `raylib5`, `vulkan`, `vulkan_glfw`, `x11`, `x11_opengl`, `smallpt` |
 | **GUI** | `gtk4`, `gtk4ui`, `dunnetgtk`, `qt6` |
-| **Audio** | `openal`, `synth`, `pipewire`, `rtaudio` |
+| **Audio** | `openal`, `synth`, `mixer`, `pipewire`, `rtaudio` |
 | **Other** | `boost`, `boost_thread`, `notify`, `reactphysics`, `fastcgi`, `tinyhello`, `win64crate` |
 
 Build all examples:
@@ -309,6 +309,26 @@ The formatting style is fixed and not configurable, on purpose.
 * `valgrind` — for profiling (`oh valgrind`)
 * `clang-format` — for `oh fmt`
 * `ninja` — for `oh ninja` / `oh cmake ninja`
+
+### Arch Linux (all examples)
+
+```sh
+sudo pacman -S --needed base-devel boost fcgi freeglut glew glfw glibmm glm glu \
+  gtk4 libconfig libpipewire libx11 openal qt6-base raylib reactphysics3d \
+  rtaudio sdl2-compat sdl2_mixer sfml vte4 vulkan-headers vulkan-icd-loader
+```
+
+### Debian / Ubuntu (all examples)
+
+```sh
+sudo apt-get install -y build-essential pkg-config \
+  libboost-all-dev libconfig++-dev libfcgi-dev libglew-dev libglfw3-dev \
+  libglibmm-2.4-dev libglm-dev libglu1-mesa-dev libgtk-4-dev libopenal-dev \
+  libpipewire-0.3-dev librtaudio-dev libsdl2-dev libsdl2-mixer-dev \
+  libsfml-dev libvulkan-dev libx11-dev freeglut3-dev qt6-base-dev
+```
+
+Note: `raylib`, `reactphysics3d` and `vte4` are not available in Ubuntu repositories. Examples that depend on them will be skipped.
 
 ## Platform Notes
 
