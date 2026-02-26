@@ -14,15 +14,36 @@ jobs:
         compiler: [gcc, clang]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: "1.25"
 
-      - name: Install compiler
+      - name: Install compiler and libraries
         run: |
           sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config \
+            libboost-all-dev \
+            libconfig++-dev \
+            libfcgi-dev \
+            libglew-dev \
+            libglfw3-dev \
+            libglibmm-2.4-dev \
+            libglm-dev \
+            libglu1-mesa-dev \
+            libgtk-4-dev \
+            libopenal-dev \
+            libpipewire-0.3-dev \
+            librtaudio-dev \
+            libsdl2-dev \
+            libsdl2-mixer-dev \
+            libsfml-dev \
+            libvulkan-dev \
+            libx11-dev \
+            freeglut3-dev \
+            qt6-base-dev
           if [ "${{ matrix.compiler }}" = "clang" ]; then
             sudo apt-get install -y clang
           else
@@ -44,3 +65,25 @@ jobs:
           ./oh -C examples/hello build
           ./oh -C examples/hello test
           ./oh -C examples/hello clean
+
+      - name: Build examples (best effort)
+        run: |
+          failed=""
+          # Skip examples needing packages not in Ubuntu repos
+          skip="bisqwit entities mixer raylib raylib5 reactphysics win64crate"
+          for d in examples/*/; do
+            name=$(basename "$d")
+            echo "$skip" | grep -qw "$name" && { printf "=== %-30s SKIP\n" "$d"; continue; }
+            printf "=== %-30s" "$d"
+            if ./oh -C "$d" build > /dev/null 2>&1; then
+              echo "OK"
+            else
+              echo "FAIL"
+              failed="$failed $d"
+            fi
+          done
+          if [ -n "$failed" ]; then
+            echo ""
+            echo "Failed:$failed"
+            exit 1
+          fi
