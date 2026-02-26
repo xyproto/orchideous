@@ -32,16 +32,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "sound.h"
 #include <SFML/Audio.hpp>
 #include <SFML/Graphics.hpp>
+#include <cstdint>
 #include <vector>
-
-using namespace std;
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(256, 256), "Audio");
+    sf::RenderWindow window(sf::VideoMode({256, 256}), "Audio");
 
     sf::SoundBuffer buffer;
-    vector<sf::Int16> samples;
+    std::vector<std::int16_t> samples;
 
     // https://www.seventhstring.com/resources/notefrequencies.html
 
@@ -58,23 +57,20 @@ int main()
         samples.push_back(sound::SquareWave(i, 130.8, 0.9));
     }
 
-    buffer.loadFromSamples(&samples[0], samples.size(), 1, 44100);
+    (void)buffer.loadFromSamples(samples.data(), samples.size(), 1, 44100,
+                                 {sf::SoundChannel::Mono});
 
-    sf::Sound sound;
-    sound.setBuffer(buffer);
+    sf::Sound sound(buffer);
     sound.play();
 
     while (window.isOpen()) {
-        sf::Event event;
-
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
+        while (const auto event = window.pollEvent()) {
+            if (event->is<sf::Event::Closed>())
                 window.close();
+            else if (const auto* kp = event->getIf<sf::Event::KeyPressed>()) {
+                if (kp->code == sf::Keyboard::Key::Escape || kp->code == sf::Keyboard::Key::Q)
+                    window.close();
             }
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)
-            || sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) {
-            window.close();
         }
     }
 
