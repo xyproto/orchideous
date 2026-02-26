@@ -30,8 +30,6 @@ The auto-detection of external libraries and headers relies on them being includ
 
 ### Arch Linux
 
-Install `orchideous` from AUR, or build from source:
-
 ```sh
 git clone https://github.com/xyproto/orchideous
 cd orchideous
