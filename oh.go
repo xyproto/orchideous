@@ -192,6 +192,17 @@ func doRun(opts BuildOptions, runArgs []string) error {
 		exe += ".exe"
 	}
 	exePath := dotSlash(exe)
+	// Auto-detect .exe and use wine if available
+	if strings.HasSuffix(exePath, ".exe") {
+		if winePath, err := exec.LookPath("wine"); err == nil {
+			c := exec.Command(winePath, exePath)
+			c.Args = append(c.Args, runArgs...)
+			c.Stdin = os.Stdin
+			c.Stdout = os.Stdout
+			c.Stderr = os.Stderr
+			return c.Run()
+		}
+	}
 	c := exec.Command(exePath, runArgs...)
 	c.Stdin = os.Stdin
 	c.Stdout = os.Stdout
