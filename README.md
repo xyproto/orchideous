@@ -1,6 +1,8 @@
 # Orchideous
 
-[![CI](https://github.com/xyproto/orchideous/actions/workflows/ci.yml/badge.svg)](https://github.com/xyproto/orchideous/actions/workflows/ci.yml) [![License](https://img.shields.io/badge/license-BSD3-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+[![CI](https://github.com/xyproto/orchideous/actions/workflows/ci.yml/badge.svg)](https://github.com/xyproto/orchideous/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-BSD3-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
+[![Standard](https://img.shields.io/badge/C%2B%2B-20-blue.svg)]
 
 Zero-configuration build tool for C and C++ projects.
 
