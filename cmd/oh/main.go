@@ -157,6 +157,9 @@ func doTest(opts orchideous.BuildOptions) error {
 	flags := orchideous.AssembleFlags(proj, opts)
 	for _, ts := range testSrcs {
 		testExe := strings.TrimSuffix(ts, filepath.Ext(ts))
+		if opts.Win64 || proj.HasWin64 {
+			testExe += ".exe"
+		}
 		srcs := append([]string{ts}, proj.DepSources...)
 		if err := orchideous.CompileSources(srcs, testExe, flags); err != nil {
 			return fmt.Errorf("building test %s: %w", testExe, err)
@@ -178,6 +181,9 @@ func doTestBuild(opts orchideous.BuildOptions) error {
 
 	if proj.MainSource != "" {
 		exe := orchideous.ExecutableName()
+		if opts.Win64 || proj.HasWin64 {
+			exe += ".exe"
+		}
 		srcs := append([]string{proj.MainSource}, proj.DepSources...)
 		if err := orchideous.CompileSources(srcs, exe, flags); err != nil {
 			return err
@@ -186,6 +192,9 @@ func doTestBuild(opts orchideous.BuildOptions) error {
 
 	for _, ts := range proj.TestSources {
 		testExe := strings.TrimSuffix(ts, filepath.Ext(ts))
+		if opts.Win64 || proj.HasWin64 {
+			testExe += ".exe"
+		}
 		srcs := append([]string{ts}, proj.DepSources...)
 		if err := orchideous.CompileSources(srcs, testExe, flags); err != nil {
 			return fmt.Errorf("building test %s: %w", testExe, err)
