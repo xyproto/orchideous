@@ -4,28 +4,37 @@ A Go port of [xyproto/cxx](https://github.com/xyproto/cxx) — an auto-build too
 
 ## Usage
 
-Place `orchideous` in your `PATH`, then run it in a directory with C/C++ source files:
+Place `orchideous` in your `PATH` as `oh`, then run it in a directory with C/C++ source files:
 
 ```sh
-orchideous              # build the project
-orchideous run          # build and run
-orchideous test         # build and run tests
-orchideous clean        # remove built files
-orchideous opt          # optimized build
-orchideous debug        # debug build (with sanitizers)
-orchideous clang        # build with clang++
-orchideous cmake        # generate CMakeLists.txt
-orchideous install      # install to PREFIX
-orchideous --help       # show all commands
+oh              # build the project
+oh run          # build and run
+oh test         # build and run tests
+oh clean        # remove built files
+oh opt          # optimized build
+oh debug        # debug build (with sanitizers)
+oh clang        # build with clang++
+oh cmake        # generate CMakeLists.txt
+oh install      # install to PREFIX
+oh --help       # show all commands
 ```
 
 ## Installing
 
-(dev version, requires Go 1.26 or later)
+On Arch Linux, using the dev version and Go 1.26 or later:
 
 ```sh
 go install github.com/xyproto/orchideous@latest
+install -Dm755 ~/go/bin/orchideous /usr/bin/oh
 ```
+
+On other UNIX-like systems:
+
+```sh
+go install github.com/xyproto/orchideous@latest
+install -m755 ~/go/bin/orchideous /usr/local/bin/oh
+```
+
 
 ## Building
 
