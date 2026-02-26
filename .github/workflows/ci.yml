@@ -56,9 +56,7 @@ jobs:
             libx11-dev \
             freeglut3-dev \
             qt6-base-dev \
-            libraylib-dev \
-            librtaudio-dev \
-            libreactphysics3d-dev
+            librtaudio-dev
           if [ "${{ matrix.compiler }}" = "clang" ]; then
             sudo apt-get install -y clang
           else
@@ -94,7 +92,8 @@ jobs:
           failed=""
           # Skip examples needing packages not in Ubuntu repos or with incompatible versions
           # SFML 3 is not yet in Ubuntu repos, so skip SFML-based examples
-          skip="bisqwit entities sfml sfml_audio win64crate"
+          # raylib and reactphysics3d are not in Ubuntu repos
+          skip="bisqwit entities raylib raylib5 reactphysics sfml sfml_audio win64crate"
           for d in examples/*/; do
             name=$(basename "$d")
             echo "$skip" | grep -qw "$name" && { printf "=== %-30s SKIP\n" "$d"; continue; }
@@ -123,7 +122,7 @@ jobs:
         run: |
           pacman -Syu --noconfirm
           pacman -S --noconfirm --needed \
-            base-devel git go pkg-config \
+            base-devel git go pkgconf \
             boost fcgi freeglut glew glfw glibmm glm glu \
             gtk4 libconfig libpipewire libx11 openal qt6-base \
             raylib reactphysics3d rtaudio sdl2 sdl2_mixer \
@@ -261,6 +260,7 @@ jobs:
             pkg_add go gcc pkgconf
           run: |
             export CXX=eg++
+            export CC=egcc
             go build -v -o oh ./cmd/oh
             go vet ./...
             go test -v -count=1 ./...
