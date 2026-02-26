@@ -34,7 +34,7 @@ jobs:
 
       - name: Install compiler and libraries
         run: |
-          sudo apt-get update -qq
+          sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             pkg-config \
             libboost-all-dev \
@@ -118,17 +118,19 @@ jobs:
     container:
       image: archlinux:latest
     steps:
-      - name: Install base tools
+      - name: Install git
+        run: pacman -Sy --noconfirm git
+      - uses: actions/checkout@v6
+      - name: Install dependencies
         run: |
+          pacman -Sy --noconfirm archlinux-keyring
           pacman -Syu --noconfirm
           pacman -S --noconfirm --needed \
-            base-devel git go pkgconf \
-            boost fcgi freeglut glew glfw glibmm glm glu \
+            base-devel go pkgconf \
+            boost fcgi freeglut glew glfw-x11 glibmm glm glu \
             gtk4 libconfig libpipewire libx11 openal qt6-base \
             raylib reactphysics3d rtaudio sdl2 sdl2_mixer \
             sfml vte4 vulkan-headers vulkan-icd-loader
-
-      - uses: actions/checkout@v6
 
       - name: Build
         run: go build -v -o oh ./cmd/oh
