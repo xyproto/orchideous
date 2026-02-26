@@ -1,0 +1,6 @@
+github.com/xyproto/binary v1.4.0 h1:A2jIJszlDJidfdlmIcUKUFhZz53TZqX2ISENBY2E2ps=
+github.com/xyproto/binary v1.4.0/go.mod h1:0bRi3JImoPWOFfM7yPYzNVyLZXYGQTBwdNRPs4m3+qQ=
+github.com/xyproto/env/v2 v2.5.6 h1:ZDhM5caXmM0/Bjf4BHd3QkC6p0g0aXAtTwpBOS4sxyU=
+github.com/xyproto/env/v2 v2.5.6/go.mod h1:F81ZEzu15s3TWUZJ1uzBl9iNeq9zcfHvxMkQJaLZUl0=
+github.com/xyproto/files v1.10.7 h1:g2jBtB3QywtspOsOd+DwTeNnm9Qe5tqriWjJmwgDXbg=
+github.com/xyproto/files v1.10.7/go.mod h1:cP7k9SE756cww4r2pN3fXOeQXtJqfpiA2b+qfVNrJCY=
