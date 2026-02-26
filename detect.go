@@ -514,9 +514,14 @@ func uniqueStrings(strs []string) []string {
 	seen := make(map[string]bool)
 	var result []string
 	for _, s := range strs {
-		if !seen[s] {
-			seen[s] = true
-			result = append(result, s)
+		clean := filepath.Clean(s)
+		key := clean
+		if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
+			key = strings.ToLower(clean)
+		}
+		if !seen[key] {
+			seen[key] = true
+			result = append(result, clean)
 		}
 	}
 	return result
