@@ -1,6 +1,6 @@
 ## Orchideous <img src="img/orchideous.svg" width="128" align="right">
 
-![Standard](https://img.shields.io/badge/C%2B%2B-20-blue.svg)
+![Standard](https://img.shields.io/badge/C%2B%2B-23-blue.svg)
 [![CI](https://github.com/xyproto/orchideous/actions/workflows/ci.yml/badge.svg)](https://github.com/xyproto/orchideous/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-BSD3-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
@@ -324,11 +324,11 @@ sudo pacman -S --needed base-devel boost fcgi freeglut glew glfw glibmm glm glu 
 sudo apt-get install -y build-essential pkg-config \
   libboost-all-dev libconfig++-dev libfcgi-dev libglew-dev libglfw3-dev \
   libglibmm-2.4-dev libglm-dev libglu1-mesa-dev libgtk-4-dev libopenal-dev \
-  libpipewire-0.3-dev librtaudio-dev libsdl2-dev libsdl2-mixer-dev \
-  libsfml-dev libvulkan-dev libx11-dev freeglut3-dev qt6-base-dev
+  libpipewire-0.3-dev libsdl2-dev libsdl2-mixer-dev libsfml-dev \
+  libvte-2.91-gtk4-dev libvulkan-dev libx11-dev freeglut3-dev qt6-base-dev
 ```
 
-Note: `raylib`, `reactphysics3d` and `vte4` are not available in Ubuntu repositories. Examples that depend on them will be skipped.
+Note: `raylib` and `reactphysics3d` are not available in Ubuntu repositories. Ubuntu 24.04 ships SFML 2 and rtaudio 5, while the included examples use SFML 3 and rtaudio 6 APIs — those examples will be skipped on Ubuntu. Examples that depend on unavailable libraries are automatically skipped in CI.
 
 ## Platform Notes
 
