@@ -203,10 +203,10 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 
 	// Qt6
 	if proj.HasQt6 {
-		for _, f := range strings.Fields(qt6CxxFlags) {
+		for f := range strings.FieldsSeq(qt6CxxFlags) {
 			bf.CFlags = appendUnique(bf.CFlags, f)
 		}
-		for _, f := range strings.Fields(qt6LinkFlags) {
+		for f := range strings.FieldsSeq(qt6LinkFlags) {
 			bf.LDFlags = appendUnique(bf.LDFlags, f)
 		}
 	}
@@ -479,10 +479,10 @@ func needsRecompile(src, obj string) bool {
 	// Parse the .d file: format is "obj: src header1 header2 ..."
 	// Lines may be continued with backslash
 	content := strings.ReplaceAll(string(data), "\\\n", " ")
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		if _, after, ok := strings.Cut(line, ":"); ok {
-			deps := strings.Fields(after)
-			for _, dep := range deps {
+			deps := strings.FieldsSeq(after)
+			for dep := range deps {
 				depInfo, err := os.Stat(dep)
 				if err != nil {
 					continue

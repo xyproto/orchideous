@@ -286,10 +286,19 @@ func containsMain(filename string) bool {
 	if err != nil {
 		return false
 	}
-	s := string(data)
-	return strings.Contains(s, " main(") || strings.Contains(s, "\nmain(") ||
-		strings.Contains(s, " SDL_main(") || strings.Contains(s, "\nSDL_main(") ||
-		strings.Contains(s, " main (") || strings.Contains(s, "\nmain (")
+	for line := range strings.SplitSeq(string(data), "\n") {
+		trimmed := strings.TrimSpace(line)
+		// Skip single-line comments
+		if strings.HasPrefix(trimmed, "//") {
+			continue
+		}
+		if strings.Contains(line, " main(") || strings.HasPrefix(trimmed, "main(") ||
+			strings.Contains(line, " SDL_main(") || strings.HasPrefix(trimmed, "SDL_main(") ||
+			strings.Contains(line, " main (") || strings.HasPrefix(trimmed, "main (") {
+			return true
+		}
+	}
+	return false
 }
 
 // collectExternalIncludes parses source files for #include <...> directives
@@ -342,7 +351,7 @@ func cppPreprocessIncludes(filename string) []string {
 		return nil
 	}
 	var includes []string
-	for _, line := range strings.Split(string(out), "\n") {
+	for line := range strings.SplitSeq(string(out), "\n") {
 		line = strings.TrimSpace(line)
 		if !strings.HasPrefix(line, "#include") {
 			continue

@@ -316,7 +316,7 @@ func resolveExtraFlags(includes []string, win64 bool) (cflags, ldflags []string)
 
 // mergeFlags splits pkg-config output and adds to cflags/ldflags.
 func mergeFlags(cflags, ldflags []string, flags string) ([]string, []string) {
-	for _, f := range strings.Fields(flags) {
+	for f := range strings.FieldsSeq(flags) {
 		if strings.HasPrefix(f, "-l") || strings.HasPrefix(f, "-L") || strings.HasPrefix(f, "-Wl,") {
 			ldflags = appendUnique(ldflags, f)
 		} else {
@@ -445,7 +445,7 @@ func compilerIncludes(compiler string) []string {
 		return nil
 	}
 	var dirs []string
-	for _, line := range strings.Split(string(out), "\n") {
+	for line := range strings.SplitSeq(string(out), "\n") {
 		d := strings.TrimSpace(line)
 		if d != "" && fileExists(d) {
 			dirs = append(dirs, d)
@@ -493,7 +493,20 @@ func isLinux() bool {
 // isCompilerGCC checks if a compiler path looks like gcc/g++.
 func isCompilerGCC(compiler string) bool {
 	base := filepath.Base(compiler)
-	return strings.Contains(base, "g++") || strings.Contains(base, "gcc")
+	for _, needle := range []string{"g++", "gcc"} {
+		idx := strings.Index(base, needle)
+		if idx < 0 {
+			continue
+		}
+		if idx == 0 || !isLetter(base[idx-1]) {
+			return true
+		}
+	}
+	return false
+}
+
+func isLetter(b byte) bool {
+	return (b >= 'a' && b <= 'z') || (b >= 'A' && b <= 'Z')
 }
 
 // isCompilerClang checks if a compiler path looks like clang/clang++.

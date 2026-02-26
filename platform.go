@@ -131,7 +131,7 @@ func pcFilesToFlags(pcFiles []string) string {
 		if flags == "" && pcName != "glm" && pcName != "libglvnd" && pcName != "RapidJSON" {
 			flags = "-l" + pcName
 		}
-		for _, f := range strings.Fields(flags) {
+		for f := range strings.FieldsSeq(flags) {
 			if !seen[f] {
 				seen[f] = true
 				allFlags = append(allFlags, f)
@@ -157,7 +157,7 @@ func pcFilesToFlagsWithDir(pcFiles []string) string {
 		if flags == "" && pcName != "glm" && pcName != "libglvnd" && pcName != "RapidJSON" {
 			flags = "-l" + pcName
 		}
-		for _, f := range strings.Fields(flags) {
+		for f := range strings.FieldsSeq(flags) {
 			if !seen[f] {
 				seen[f] = true
 				allFlags = append(allFlags, f)
@@ -224,7 +224,7 @@ func lookupPCFiles(platform, pkg string) []string {
 	out, err := exec.Command("sh", "-c", cmd).Output()
 	var pcFiles []string
 	if err == nil {
-		for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		for line := range strings.SplitSeq(strings.TrimSpace(string(out)), "\n") {
 			if line != "" {
 				pcFiles = append(pcFiles, line)
 			}
@@ -454,7 +454,7 @@ func recommendPackage(missingIncludes []string) {
 			if hasCommand("pkgfile") {
 				out, err := exec.Command("sh", "-c", "LC_ALL=C pkgfile "+inc+" 2>/dev/null").Output()
 				if err == nil {
-					for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+					for line := range strings.SplitSeq(strings.TrimSpace(string(out)), "\n") {
 						pkg := line
 						if strings.Contains(pkg, "/") {
 							parts := strings.SplitN(pkg, "/", 2)
