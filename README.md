@@ -1,6 +1,6 @@
 # Orchideous
 
-A Go port of [cxx](https://github.com/xyproto/cxx) — an auto-build tool for C and C++ projects.
+A Go port of [xyproto/cxx](https://github.com/xyproto/cxx) — an auto-build tool for C and C++ projects. LLMs was used when porting.
 
 ## Usage
 
