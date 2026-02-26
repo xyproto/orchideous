@@ -1,5 +1,6 @@
 #include <array>
 #include <cmath>
+#include <map>
 #include <SFML/Graphics.hpp>
 #include <SFML/OpenGL.hpp>
 
@@ -19,25 +20,30 @@ int main()
 {
     using namespace sf;
     // Create the main window
-    RenderWindow window(VideoMode(3840, 2160), "Hello", Style::Default, ContextSettings(24,0,2));
+    RenderWindow window(VideoMode({3840, 2160}), "Hello", Style::Default, State::Windowed, ContextSettings{.depthBits = 24, .antiAliasingLevel = 2});
     window.setVerticalSyncEnabled(true);
 
     // Configure OpenGL features.
-    window.resetGLStates();  // Enables {VERTEX,TEXTURE_COORD,COLOR}_ARRAY, TEXTURE_2D. Disables LIGHTING,CULL_FACE.
+    window.resetGLStates();
+    // SFML 3 no longer enables legacy fixed-function client states, so enable them manually.
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    glEnable(GL_TEXTURE_2D);
     glDisableClientState(GL_NORMAL_ARRAY); // Disable normals, not used.
     glEnable(GL_DEPTH_TEST);               // SFML disables z-buffer. Re-enable, because we need it.
     glClearDepth(1.f);
 
     // Load some textures
     Texture tx[7];
-    tx[0].loadFromFile("resources/bottom.jpg");
-    tx[1].loadFromFile("resources/top.jpg");
-    tx[2].loadFromFile("resources/left.jpg");
-    tx[3].loadFromFile("resources/right.jpg");
-    tx[4].loadFromFile("resources/back.jpg");
-    tx[5].loadFromFile("resources/front.jpg");
-    tx[6].loadFromFile("resources/wall3.jpg");
-    tx[6].generateMipmap();
+    (void)tx[0].loadFromFile("resources/bottom.jpg");
+    (void)tx[1].loadFromFile("resources/top.jpg");
+    (void)tx[2].loadFromFile("resources/left.jpg");
+    (void)tx[3].loadFromFile("resources/right.jpg");
+    (void)tx[4].loadFromFile("resources/back.jpg");
+    (void)tx[5].loadFromFile("resources/front.jpg");
+    (void)tx[6].loadFromFile("resources/wall3.jpg");
+    (void)tx[6].generateMipmap();
 
     // Construct the world geometry from axis-aligned cuboids made of triangles.
     std::vector<GLfloat> tri;
@@ -77,35 +83,44 @@ int main()
     glVertexPointer(3,   GL_FLOAT, 8*sizeof(GLfloat), &tri[3]);
     glTexCoordPointer(2, GL_FLOAT, 8*sizeof(GLfloat), &tri[6]);
 
-    // Setup up the view port, the clipping planes, the aspect ratio and the field of vision (FoV)
-    glMatrixMode(GL_PROJECTION);
-    glViewport(0, 0, window.getSize().x, window.getSize().y);
-    GLfloat near=.03f, far=50.f, ratio = near * window.getSize().x / window.getSize().y;
-    glFrustum(-ratio, ratio, -near, near, near, far);
+    GLfloat near=.03f, far=50.f;
 
     // Start game loop
-    float rx=0,ry=1,rz=-.1, mx=0,my=0,mz=-2.5, lx=3.86,ly=-0.29,lz=15.9, aa=0.92,ab=-0.18,ac=-0.35,ad=0.07, fog=4;
-    GLfloat tform[16]{1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1}; // Initialize default transformation matrix.
-    for(std::map<int,bool> keys; window.isOpen() && !keys[Keyboard::Escape]; window.display())
+    float rx=0,ry=0,rz=0, mx=0,my=0,mz=0, lx=0,ly=-20,lz=.5, aa=.7071f,ab=.7071f,ac=0,ad=0, fog=1;
+    // Initialize transformation matrix from quaternion (not identity, so the initial view direction is correct).
+    GLfloat tform[16]{1-2*(ac*ac+ad*ad),   2*(ab*ac+aa*ad),   2*(ab*ad-aa*ac),   0,
+                        2*(ab*ac-aa*ad), 1-2*(ab*ab+ad*ad),   2*(ac*ad+aa*ab),   0,
+                        2*(ab*ad+aa*ac),   2*(ac*ad-aa*ab), 1-2*(ab*ab+ac*ac),   0,
+                                      0,                 0,                 0,   1};
+    for(std::map<Keyboard::Key,bool> keys; window.isOpen() && !keys[Keyboard::Key::Escape]; window.display())
     {
+        // Setup up the view port, the clipping planes, the aspect ratio and the field of vision (FoV)
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glViewport(0, 0, window.getSize().x, window.getSize().y);
+        GLfloat ratio = near * window.getSize().x / window.getSize().y;
+        glFrustum(-ratio, ratio, -near, near, near, far);
+
         // Process events
-        for(Event event; window.pollEvent(event); )
-            switch(event.type)
-            {
-                case Event::Closed:      keys[Keyboard::Escape] = true; default: break;
-                case Event::KeyPressed:  keys[event.key.code] = true; break;
-                case Event::KeyReleased: keys[event.key.code] = false; break;
-            }
-        if(keys[Keyboard::V]) { for(std::size_t p=6*6*8; p<tri.size(); p+=8) if(tri[p+4]>0.1)tri[p+4] *= 0.95; fog *= 0.95; }
+        while(const auto event = window.pollEvent())
+        {
+            if (event->is<Event::Closed>())
+                keys[Keyboard::Key::Escape] = true;
+            else if (const auto* kp = event->getIf<Event::KeyPressed>())
+                keys[kp->code] = true;
+            else if (const auto* kr = event->getIf<Event::KeyReleased>())
+                keys[kr->code] = false;
+        }
+        if(keys[Keyboard::Key::V]) { for(std::size_t p=6*6*8; p<tri.size(); p+=8) if(tri[p+4]>0.1)tri[p+4] *= 0.95; fog *= 0.95; }
 
         // The input scheme is the same as in Descent, the game by Parallax Interactive.
         // Mouse input is not handled for now.
-        bool up    = keys[Keyboard::Up]   || keys[Keyboard::Numpad8];
-        bool down  = keys[Keyboard::Down] || keys[Keyboard::Numpad2],     alt   = keys[Keyboard::LAlt]|| keys[Keyboard::RAlt];
-        bool left  = keys[Keyboard::Left] || keys[Keyboard::Numpad4],     rleft = keys[Keyboard::Q]   || keys[Keyboard::Numpad7];
-        bool right = keys[Keyboard::Right]|| keys[Keyboard::Numpad6],     rright= keys[Keyboard::E]   || keys[Keyboard::Numpad9];
-        bool fwd   = keys[Keyboard::A], sup   = keys[Keyboard::Subtract], sleft = keys[Keyboard::Numpad1];
-        bool back  = keys[Keyboard::Z], sdown = keys[Keyboard::Add],      sright= keys[Keyboard::Numpad3];
+        bool up    = keys[Keyboard::Key::Up]   || keys[Keyboard::Key::Numpad8];
+        bool down  = keys[Keyboard::Key::Down] || keys[Keyboard::Key::Numpad2],     alt   = keys[Keyboard::Key::LAlt]|| keys[Keyboard::Key::RAlt];
+        bool left  = keys[Keyboard::Key::Left] || keys[Keyboard::Key::Numpad4],     rleft = keys[Keyboard::Key::Q]   || keys[Keyboard::Key::Numpad7];
+        bool right = keys[Keyboard::Key::Right]|| keys[Keyboard::Key::Numpad6],     rright= keys[Keyboard::Key::E]   || keys[Keyboard::Key::Numpad9];
+        bool fwd   = keys[Keyboard::Key::A], sup   = keys[Keyboard::Key::Subtract], sleft = keys[Keyboard::Key::Numpad1];
+        bool back  = keys[Keyboard::Key::Z], sdown = keys[Keyboard::Key::Add],      sright= keys[Keyboard::Key::Numpad3];
 
         // Apply rotation delta with hysteresis: newvalue = input*eagerness + oldvalue*(1-eagerness)
         rx = rx*.8f + .2f*(up     - down) * !alt;

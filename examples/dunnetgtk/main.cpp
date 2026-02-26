@@ -11,32 +11,38 @@
 
 using namespace std::string_literals;
 
-// new_window creates and returns a Gtk window.
-// The given title is used as the window title.
-auto new_window(std::string const& title)
+static VteTerminal* terminal;
+static GtkWindow* window;
+
+void spawn_callback(VteTerminal*, GPid, GError* error, gpointer)
 {
-    auto window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), title.c_str());
-    return window;
+    if (error) {
+        std::cerr << "spawn error: " << error->message << std::endl;
+        g_error_free(error);
+    }
 }
 
-// new_color parses the given string and returns a GdkRGBA struct
-// which must be freed after use.
-auto new_color(std::string const& c)
+void on_child_exited(VteTerminal*, int, gpointer data)
 {
-    auto colorstruct = (GdkRGBA*)malloc(sizeof(GdkRGBA));
-    gdk_rgba_parse(colorstruct, c.c_str());
-    return colorstruct;
+    auto app = G_APPLICATION(data);
+    g_application_quit(app);
 }
 
-void eof() { std::cout << "bye" << std::endl; }
-
-int main(int argc, char* argv[])
+void on_close_request(GtkWindow*, gpointer data)
 {
-    // Initialize Gtk, the window and the terminal
-    gtk_init(&argc, &argv);
-    auto window = new_window("Dunnet"s);
-    auto terminal = vte_terminal_new();
+    auto app = G_APPLICATION(data);
+    g_application_quit(app);
+}
+
+static void activate(GtkApplication* app, gpointer)
+{
+    // Create the main window
+    window = GTK_WINDOW(gtk_application_window_new(app));
+    gtk_window_set_title(window, "Dunnet");
+
+    // Create the terminal
+    auto term_widget = vte_terminal_new();
+    terminal = VTE_TERMINAL(term_widget);
 
     using std::filesystem::exists;
     using std::filesystem::path;
@@ -44,12 +50,10 @@ int main(int argc, char* argv[])
     using std::filesystem::status;
 
     // Search for the emacs executable in $PATH
-    // Thanks https://stackoverflow.com/a/14571264
-    // TODO: Extract to a "which" function
     char* dup = strdup(getenv("PATH"));
     char* s = dup;
     char* p = nullptr;
-    path found { "emacs"s }; // name of executable to search for, may be mutated
+    path found { "emacs"s };
     do {
         p = strchr(s, ':');
         if (p != nullptr) {
@@ -63,13 +67,13 @@ int main(int argc, char* argv[])
     } while (p != nullptr);
     free(dup);
 
-    // Check again if the executable exists
     if (found == "emacs"s) {
         std::cerr << found << " does not exist in PATH" << std::endl;
-        return EXIT_FAILURE;
+        g_application_quit(G_APPLICATION(app));
+        return;
     }
 
-    // Build an array of strings, which is the command to be run
+    // Build the command
     const char* command[5];
     command[0] = found.c_str();
     command[1] = "-batch";
@@ -81,53 +85,59 @@ int main(int argc, char* argv[])
     const auto perm = status(command[0]).permissions();
     if ((perm & perms::owner_exec) == perms::none) {
         std::cerr << command[0] << " is not executable for this user" << std::endl;
-        return EXIT_FAILURE;
+        g_application_quit(G_APPLICATION(app));
+        return;
     }
 
-    // Spawn a terminal
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    vte_terminal_spawn_sync(VTE_TERMINAL(terminal), VTE_PTY_DEFAULT,
-        nullptr, // working directory
-        (char**)command, // command
-        nullptr, // environment
-        (GSpawnFlags)0, // spawn flags
-        nullptr, nullptr, // child setup
-        nullptr, // child PID
-        nullptr, nullptr);
-#pragma GCC diagnostic pop
+    // Spawn the terminal asynchronously (GTK4 VTE has no spawn_sync)
+    vte_terminal_spawn_async(terminal, VTE_PTY_DEFAULT,
+        nullptr,           // working directory
+        (char**)command,   // command
+        nullptr,           // environment
+        (GSpawnFlags)0,    // spawn flags
+        nullptr, nullptr, nullptr, // child setup
+        -1,                // timeout
+        nullptr,           // cancellable
+        spawn_callback,    // callback
+        nullptr);          // user data
 
     // Set background color to 95% opaque black
-    auto black = new_color("rgba(0, 0, 0, 0.95)"s);
-    vte_terminal_set_color_background(VTE_TERMINAL(terminal), black);
-    free(black);
+    GdkRGBA black;
+    gdk_rgba_parse(&black, "rgba(0, 0, 0, 0.95)");
+    vte_terminal_set_color_background(terminal, &black);
 
     // Set foreground color
-    auto green = new_color("chartreuse"s);
-    vte_terminal_set_color_foreground(VTE_TERMINAL(terminal), green);
-    free(green);
+    GdkRGBA green;
+    gdk_rgba_parse(&green, "chartreuse");
+    vte_terminal_set_color_foreground(terminal, &green);
 
     // Set font
     auto font_desc = pango_font_description_from_string("courier bold 16");
-    vte_terminal_set_font(VTE_TERMINAL(terminal), font_desc);
+    vte_terminal_set_font(terminal, font_desc);
+    pango_font_description_free(font_desc);
 
     // Set cursor shape to UNDERLINE
-    vte_terminal_set_cursor_shape(VTE_TERMINAL(terminal), VTE_CURSOR_SHAPE_UNDERLINE);
+    vte_terminal_set_cursor_shape(terminal, VTE_CURSOR_SHAPE_UNDERLINE);
 
     // Set cursor blink to OFF
-    vte_terminal_set_cursor_blink_mode(VTE_TERMINAL(terminal), VTE_CURSOR_BLINK_OFF);
+    vte_terminal_set_cursor_blink_mode(terminal, VTE_CURSOR_BLINK_OFF);
 
-    // Connect some signals
-    g_signal_connect(window, "delete-event", gtk_main_quit, nullptr);
-    g_signal_connect(terminal, "child-exited", gtk_main_quit, nullptr);
-    g_signal_connect(terminal, "eof", eof, nullptr);
+    // Connect signals
+    g_signal_connect(window, "close-request", G_CALLBACK(on_close_request), app);
+    g_signal_connect(terminal, "child-exited", G_CALLBACK(on_child_exited), app);
 
     // Add the terminal to the window
-    gtk_container_add(GTK_CONTAINER(window), terminal);
+    gtk_window_set_child(window, term_widget);
 
-    // Show the window and run the Gtk event loop
-    gtk_widget_show_all(window);
-    gtk_main();
+    // Present the window (GTK4: widgets are visible by default)
+    gtk_window_present(window);
+}
 
-    return EXIT_SUCCESS;
+int main(int argc, char* argv[])
+{
+    auto app = gtk_application_new("com.example.dunnet", G_APPLICATION_DEFAULT_FLAGS);
+    g_signal_connect(app, "activate", G_CALLBACK(activate), nullptr);
+    int status = g_application_run(G_APPLICATION(app), argc, argv);
+    g_object_unref(app);
+    return status;
 }
