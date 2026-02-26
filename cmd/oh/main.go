@@ -11,7 +11,7 @@ import (
 	"github.com/xyproto/orchideous"
 )
 
-const versionString = "oh 1.0.1"
+const versionString = "oh 1.0.2"
 
 func printHelp() {
 	fmt.Printf(`%s
