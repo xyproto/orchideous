@@ -1,8 +1,8 @@
 # Orchideous
 
+![Standard](https://img.shields.io/badge/C%2B%2B-20-blue.svg)
 [![CI](https://github.com/xyproto/orchideous/actions/workflows/ci.yml/badge.svg)](https://github.com/xyproto/orchideous/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-BSD3-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
-[![Standard](https://img.shields.io/badge/C%2B%2B-20-blue.svg)]
 
 Zero-configuration build tool for C and C++ projects.
 
@@ -10,9 +10,9 @@ Have you ever had a single `main.cpp` file that you just want to compile, withou
 
 **Orchideous** (or `oh` for short) handles compiler detection, flag ordering, library discovery via `pkg-config`, incremental rebuilds, testing, formatting, cross-compilation, and more — all without a single configuration file.
 
-It should be possible to compile most of the examples in the `examples` directory, simply by running `oh` in each directory.
+It should be possible to compile all of the examples in the `examples` directory, simply by running `oh` in each directory, as long as the right packages and libraries have been installed.
 
-This is a Go port of [xyproto/cxx](https://github.com/xyproto/cxx).
+This is a Go port of [xyproto/cxx](https://github.com/xyproto/cxx) (which does approximately the same, but uses Python + Scons instead).
 
 ## Quick Start
 
