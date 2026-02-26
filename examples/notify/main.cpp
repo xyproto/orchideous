@@ -2,7 +2,8 @@
 
 int main(int argc, char* argv[])
 {
-    auto Application = Gio::Application::create("custom.notification", Gio::APPLICATION_FLAGS_NONE);
+    auto Application
+        = Gio::Application::create("custom.notification", Gio::APPLICATION_FLAGS_NONE);
     Application->register_application();
 
     auto Notification = Gio::Notification::create("What's cooking?");

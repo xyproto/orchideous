@@ -91,15 +91,15 @@ static void activate(GtkApplication* app, gpointer)
 
     // Spawn the terminal asynchronously (GTK4 VTE has no spawn_sync)
     vte_terminal_spawn_async(terminal, VTE_PTY_DEFAULT,
-        nullptr,           // working directory
-        (char**)command,   // command
-        nullptr,           // environment
-        (GSpawnFlags)0,    // spawn flags
+        nullptr, // working directory
+        (char**)command, // command
+        nullptr, // environment
+        (GSpawnFlags)0, // spawn flags
         nullptr, nullptr, nullptr, // child setup
-        -1,                // timeout
-        nullptr,           // cancellable
-        spawn_callback,    // callback
-        nullptr);          // user data
+        -1, // timeout
+        nullptr, // cancellable
+        spawn_callback, // callback
+        nullptr); // user data
 
     // Set background color to 95% opaque black
     GdkRGBA black;

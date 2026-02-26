@@ -81,9 +81,9 @@ void loadImg(int imgObjNum, char* imgFile)
     headerSize = stat_p.st_size - imgWidth * imgWidth * 3;
     fseek(bmpFile, headerSize + 1, SEEK_CUR);
     for (y = IMGBUFF_HEIGHT / 2 - imgWidth / 2; y < imgWidth + IMGBUFF_HEIGHT / 2 - imgWidth / 2;
-         y++) {
+        y++) {
         for (x = IMGBUFF_WIDTH / 2 - imgWidth / 2; x < imgWidth + IMGBUFF_WIDTH / 2 - imgWidth / 2;
-             x++) {
+            x++) {
             if ((x >= 0) && (x < IMGBUFF_WIDTH) && (y >= 0) && (y < IMGBUFF_HEIGHT))
                 imgObj[imgObjNum][IMGBUFF_WIDTH * y + x] = (int)fgetc(bmpFile) / 128 * 255;
 

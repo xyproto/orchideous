@@ -11,7 +11,7 @@ using namespace std::string_literals;
 namespace X {
 
 // Undefine the RootWindow macro, since it collides with the Window class
-//#define RootWindow(dpy, scr)  (ScreenOfDisplay(dpy,scr)->root)
+// #define RootWindow(dpy, scr)  (ScreenOfDisplay(dpy,scr)->root)
 #undef RootWindow
 
 Window::Window(int x, int y, unsigned int w, unsigned int h, std::string name)

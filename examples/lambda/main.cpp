@@ -14,7 +14,11 @@ int main(int argc, char** argv)
 
     // output (1, 2, 3)
     int x = 0, y = 0, z = 0;
-    [&]() noexcept { ++x; ++++y; ++++++z; }();
+    [&]() noexcept {
+        ++x;
+        ++ ++y;
+        ++ ++ ++z;
+    }();
     std::cout << "(" << x << ", " << y << ", " << z << ")" << std::endl;
 
     return EXIT_SUCCESS;

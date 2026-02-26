@@ -1,15 +1,9 @@
 #include <glib/gstdio.h>
 #include <gtk/gtk.h>
 
-static void print_hello(GtkWidget* widget, gpointer data)
-{
-    g_print("Hello World\n");
-}
+static void print_hello(GtkWidget* widget, gpointer data) { g_print("Hello World\n"); }
 
-static void quit_cb(GtkWindow* window)
-{
-    gtk_window_close(window);
-}
+static void quit_cb(GtkWindow* window) { gtk_window_close(window); }
 
 static void activate(GtkApplication* app, gpointer user_data)
 {

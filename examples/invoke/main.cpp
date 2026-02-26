@@ -3,7 +3,8 @@
 #include <iostream>
 
 template <typename F>
-requires std::invocable<F&, int> void PrintSquare(const std::vector<int>& vec, F fn)
+    requires std::invocable<F&, int>
+void PrintSquare(const std::vector<int>& vec, F fn)
 {
     for (auto& elem : vec)
         std::cout << fn(elem) << '\n';

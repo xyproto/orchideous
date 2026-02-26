@@ -8,7 +8,7 @@ using namespace std::string_literals;
 namespace X {
 
 // Undefine the RootWindow macro, since it collides with the Window class
-//#define RootWindow(dpy, scr)  (ScreenOfDisplay(dpy,scr)->root)
+// #define RootWindow(dpy, scr)  (ScreenOfDisplay(dpy,scr)->root)
 #undef RootWindow
 
 // Class that wraps an X11 Display and an X11 Window

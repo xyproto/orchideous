@@ -5,8 +5,8 @@
 #include <iostream>
 
 // Two-channel sawtooth wave generator.
-int saw(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames,
-    double streamTime, RtAudioStreamStatus status, void* userData)
+int saw(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames, double streamTime,
+    RtAudioStreamStatus status, void* userData)
 {
     unsigned int i, j;
     double* buffer = (double*)outputBuffer;
@@ -42,8 +42,8 @@ int main()
     unsigned int bufferFrames = 256; // 256 sample frames
     double data[2];
     try {
-        dac.openStream(&parameters, NULL, RTAUDIO_FLOAT64,
-            sampleRate, &bufferFrames, &saw, (void*)&data);
+        dac.openStream(
+            &parameters, NULL, RTAUDIO_FLOAT64, sampleRate, &bufferFrames, &saw, (void*)&data);
         dac.startStream();
     } catch (RtAudioError& e) {
         e.printMessage();

@@ -1,20 +1,16 @@
 #include <iostream>
 #include <string>
 
-// Including this path instead of just pipewire/pipewire.h lets cxx find the versioned include directory
+// Including this path instead of just pipewire/pipewire.h lets cxx find the versioned include
+// directory
 #include <pipewire-0.3/pipewire/pipewire.h>
 
 using namespace std::string_literals;
 
 // Based on https://docs.pipewire.org/page_tutorial2.html for version 0.3.29 of PipeWire
 
-static void registry_event_global(
-    void* data,
-    uint32_t id,
-    uint32_t permissions,
-    const char* type,
-    uint32_t version,
-    const struct spa_dict* props)
+static void registry_event_global(void* data, uint32_t id, uint32_t permissions, const char* type,
+    uint32_t version, const struct spa_dict* props)
 {
     std::cout << "object id:"s << id << " type:"s << type << "/"s << version << std::endl;
 }
