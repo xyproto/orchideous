@@ -40,7 +40,7 @@ install -m755 ~/go/bin/orchideous /usr/local/bin/oh
 
 ```sh
 cd orchideous
-go build -o orchideous .
+go build -o oh .
 ```
 
 ## Features
