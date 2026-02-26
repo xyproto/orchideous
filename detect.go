@@ -9,8 +9,8 @@ import (
 	"strings"
 )
 
-// sourceExts are the recognized C/C++ source file extensions.
-var sourceExts = []string{".cpp", ".cc", ".cxx", ".c"}
+// SourceExts are the recognized C/C++ source file extensions.
+var SourceExts = []string{".cpp", ".cc", ".cxx", ".c"}
 
 // localIncludePaths are relative paths searched for project headers.
 var localIncludePaths = []string{".", "include", "Include", "..", "../include", "../Include", "common", "Common", "../common", "../Common"}
@@ -78,7 +78,7 @@ type Project struct {
 func detectProject() Project {
 	var p Project
 	p.TestSources = getTestSources()
-	p.MainSource = getMainSourceFile(p.TestSources)
+	p.MainSource = GetMainSourceFile(p.TestSources)
 	p.DepSources = getDepSources(p.MainSource, p.TestSources)
 	if strings.HasSuffix(p.MainSource, ".c") {
 		p.IsC = true
@@ -171,11 +171,11 @@ func getTestSources() []string {
 	var tests []string
 	searchDirs := append([]string{"."}, localCommonPaths...)
 	for _, dir := range searchDirs {
-		for _, ext := range sourceExts {
+		for _, ext := range SourceExts {
 			matches, _ := filepath.Glob(filepath.Join(dir, "*_test"+ext))
 			tests = append(tests, matches...)
 		}
-		for _, ext := range sourceExts {
+		for _, ext := range SourceExts {
 			name := filepath.Join(dir, "test"+ext)
 			if fileExists(name) {
 				tests = append(tests, name)
@@ -186,10 +186,10 @@ func getTestSources() []string {
 	return uniqueStrings(tests)
 }
 
-// getMainSourceFile finds the main source file.
-func getMainSourceFile(testSrcs []string) string {
+// GetMainSourceFile finds the main C/C++ source file in the current directory.
+func GetMainSourceFile(testSrcs []string) string {
 	// Check for explicit main.* files
-	for _, ext := range sourceExts {
+	for _, ext := range SourceExts {
 		name := "main" + ext
 		if fileExists(name) {
 			return name
@@ -198,7 +198,7 @@ func getMainSourceFile(testSrcs []string) string {
 
 	testMap := toSet(testSrcs)
 	var allSrcs []string
-	for _, ext := range sourceExts {
+	for _, ext := range SourceExts {
 		matches, _ := filepath.Glob("*" + ext)
 		for _, m := range matches {
 			if !testMap[m] && !isTestFile(m) {
@@ -209,13 +209,13 @@ func getMainSourceFile(testSrcs []string) string {
 
 	if len(allSrcs) == 0 {
 		// Fallback: check src/ subdirectory
-		for _, ext := range sourceExts {
+		for _, ext := range SourceExts {
 			name := filepath.Join("src", "main"+ext)
 			if fileExists(name) {
 				return name
 			}
 		}
-		for _, ext := range sourceExts {
+		for _, ext := range SourceExts {
 			matches, _ := filepath.Glob(filepath.Join("src", "*"+ext))
 			for _, m := range matches {
 				if !isTestFile(m) {
@@ -247,7 +247,7 @@ func getMainSourceFile(testSrcs []string) string {
 func getDepSources(mainSrc string, testSrcs []string) []string {
 	testMap := toSet(testSrcs)
 	var deps []string
-	for _, ext := range sourceExts {
+	for _, ext := range SourceExts {
 		matches, _ := filepath.Glob("*" + ext)
 		for _, m := range matches {
 			if m != mainSrc && !testMap[m] && !isTestFile(m) {
@@ -257,7 +257,7 @@ func getDepSources(mainSrc string, testSrcs []string) []string {
 	}
 	// Also include common/ sources (excluding test files)
 	for _, cp := range localCommonPaths {
-		for _, ext := range sourceExts {
+		for _, ext := range SourceExts {
 			matches, _ := filepath.Glob(filepath.Join(cp, "*"+ext))
 			for _, m := range matches {
 				if !isTestFile(m) {
@@ -419,7 +419,7 @@ func (p *Project) resolveCommonDeps() {
 		for _, inc := range allIncludes {
 			base := strings.TrimSuffix(inc, filepath.Ext(inc))
 			for _, cp := range localCommonPaths {
-				for _, ext := range sourceExts {
+				for _, ext := range SourceExts {
 					candidate := filepath.Join(cp, base+ext)
 					if fileExists(candidate) && !existingDeps[candidate] {
 						p.DepSources = append(p.DepSources, candidate)

@@ -36,7 +36,7 @@ func writeFile(t *testing.T, path, content string) {
 func TestGetMainSourceFile_MainCpp(t *testing.T) {
 	withTempDir(t)
 	writeFile(t, "main.cpp", `int main() { return 0; }`)
-	got := getMainSourceFile(nil)
+	got := GetMainSourceFile(nil)
 	if got != "main.cpp" {
 		t.Errorf("expected main.cpp, got %q", got)
 	}
@@ -45,7 +45,7 @@ func TestGetMainSourceFile_MainCpp(t *testing.T) {
 func TestGetMainSourceFile_MainC(t *testing.T) {
 	withTempDir(t)
 	writeFile(t, "main.c", `int main() { return 0; }`)
-	got := getMainSourceFile(nil)
+	got := GetMainSourceFile(nil)
 	if got != "main.c" {
 		t.Errorf("expected main.c, got %q", got)
 	}
@@ -55,7 +55,7 @@ func TestGetMainSourceFile_NamedFile(t *testing.T) {
 	withTempDir(t)
 	writeFile(t, "app.cpp", `#include <iostream>
 int main() { return 0; }`)
-	got := getMainSourceFile(nil)
+	got := GetMainSourceFile(nil)
 	if got != "app.cpp" {
 		t.Errorf("expected app.cpp, got %q", got)
 	}
@@ -64,7 +64,7 @@ int main() { return 0; }`)
 func TestGetMainSourceFile_NoMain(t *testing.T) {
 	withTempDir(t)
 	writeFile(t, "lib.cpp", `void foo() {}`)
-	got := getMainSourceFile(nil)
+	got := GetMainSourceFile(nil)
 	if got != "" {
 		t.Errorf("expected empty, got %q", got)
 	}
@@ -74,7 +74,7 @@ func TestGetMainSourceFile_ExcludesTests(t *testing.T) {
 	withTempDir(t)
 	writeFile(t, "main.cpp", `int main() { return 0; }`)
 	writeFile(t, "foo_test.cpp", `int main() { return 0; }`)
-	got := getMainSourceFile([]string{"foo_test.cpp"})
+	got := GetMainSourceFile([]string{"foo_test.cpp"})
 	if got != "main.cpp" {
 		t.Errorf("expected main.cpp, got %q", got)
 	}
