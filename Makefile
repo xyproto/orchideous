@@ -40,7 +40,7 @@ GOFLAGS += -buildmode=pie
 BUILDFLAGS ?= -ldflags "-s -w -linkmode=external -extldflags $(LDFLAGS)"
 endif
 
-EXAMPLE_DIRS := $(sort $(dir $(wildcard examples/*/main.c examples/*/main.cpp examples/*/main.cc)))
+EXAMPLE_DIRS := $(sort $(dir $(wildcard examples/*/main.c examples/*/main.cpp examples/*/main.cc examples/*/*.cpp examples/*/*.cc examples/*/*.c)))
 
 oh: $(SRCFILES)
 	cd cmd/oh && $(GOBUILD) $(GOFLAGS) $(BUILDFLAGS) -o ../../oh$(EXE_EXT) || $(GOBUILD) -o ../../oh$(EXE_EXT)
