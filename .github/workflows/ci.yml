@@ -52,7 +52,6 @@ jobs:
             libsdl2-mixer-dev \
             libsfml-dev \
             libvte-2.91-gtk4-dev \
-            libvte-2.91-dev \
             libvulkan-dev \
             libx11-dev \
             freeglut3-dev \
@@ -280,7 +279,7 @@ jobs:
       - uses: vmactions/netbsd-vm@v1
         with:
           prepare: |
-            pkgin -y install go pkgconf
+            pkg_add go pkgconf || pkgin -y install go pkgconf
           run: |
             go build -v -buildvcs=false -o oh ./cmd/oh
             go vet ./...
