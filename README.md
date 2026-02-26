@@ -56,4 +56,4 @@ go build -o oh .
 ## General
 
 * License: BSD-3
-* Version: 0.0.1
+* Version: 0.0.2
