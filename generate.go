@@ -351,7 +351,7 @@ func doExport() error {
 // doMakeFile generates a standalone Makefile.
 func doMakeFile() error {
 	if fileExists("Makefile") {
-		return fmt.Errorf("Makefile already exists, will not overwrite")
+		return fmt.Errorf("makefile already exists, will not overwrite")
 	}
 
 	proj := detectProject()

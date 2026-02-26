@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -50,18 +51,6 @@ func hasPkgConfig() bool {
 	return err == nil
 }
 
-// resolveIncludeFlags tries to determine compiler flags for a given external include.
-func resolveIncludeFlags(inc string) string {
-	if !hasPkgConfig() {
-		return ""
-	}
-	pkgName := pkgNameFromInclude(inc)
-	if pkgName == "" {
-		return ""
-	}
-	return pkgConfigFlags(pkgName)
-}
-
 // bestGtkPkg returns the best available GTK pkg-config name, preferring the newest version.
 func bestGtkPkg() string {
 	for _, pkg := range []string{"gtk4", "gtk+-3.0", "gtk+-2.0"} {
@@ -86,6 +75,22 @@ func bestVtePkg() string {
 		}
 	}
 	return "vte-2.91-gtk4"
+}
+
+// sfmlMajorVersion returns the installed SFML major version (2 or 3), or 0 if unavailable.
+func sfmlMajorVersion() int {
+	out, err := exec.Command("pkg-config", "--modversion", "sfml-system").Output()
+	if err != nil {
+		return 0
+	}
+	ver := strings.TrimSpace(string(out))
+	if strings.HasPrefix(ver, "3") {
+		return 3
+	}
+	if strings.HasPrefix(ver, "2") {
+		return 2
+	}
+	return 0
 }
 
 // pkgNameFromInclude guesses the pkg-config package name from an include path.
@@ -181,6 +186,9 @@ func resolveExtraFlags(includes []string, win64 bool) (cflags, ldflags []string)
 
 		// SFML on macOS: add OpenGL framework + -stdlib=libc++ for clang
 		if strings.HasPrefix(lower, "sfml/") {
+			if v := sfmlMajorVersion(); v > 0 {
+				cflags = appendUnique(cflags, fmt.Sprintf("-DSFML_MAJOR_VERSION=%d", v))
+			}
 			if hasFrameworks && !win64 {
 				cflags = appendUnique(cflags, "-I/usr/local/include")
 				ldflags = appendUnique(ldflags, "-F/Library/Frameworks")
@@ -461,24 +469,6 @@ func bestStdFlag(compiler string) string {
 		}
 	}
 	return "c++17"
-}
-
-// compilerIncludes returns the system include paths known to the compiler.
-func compilerIncludes(compiler string) []string {
-	cmd := exec.Command("sh", "-c",
-		"echo | "+compiler+" -E -Wp,-v - 2>&1 | grep '^ /'")
-	out, err := cmd.Output()
-	if err != nil {
-		return nil
-	}
-	var dirs []string
-	for line := range strings.SplitSeq(string(out), "\n") {
-		d := strings.TrimSpace(line)
-		if d != "" && fileExists(d) {
-			dirs = append(dirs, d)
-		}
-	}
-	return dirs
 }
 
 func appendUnique(slice []string, val string) []string {

@@ -12,9 +12,6 @@ import (
 // sourceExts are the recognized C/C++ source file extensions.
 var sourceExts = []string{".cpp", ".cc", ".cxx", ".c"}
 
-// headerExts are the recognized header file extensions.
-var headerExts = []string{".h", ".hpp", ".hh", ".h++"}
-
 // localIncludePaths are relative paths searched for project headers.
 var localIncludePaths = []string{".", "include", "Include", "..", "../include", "../Include", "common", "Common", "../common", "../Common"}
 

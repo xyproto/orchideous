@@ -362,7 +362,12 @@ func doBuildWithDirOverrides(opts BuildOptions, proj Project) error {
 	}
 
 	srcs := append([]string{proj.MainSource}, proj.DepSources...)
-	return compileSources(srcs, exe, flags)
+	if err := compileSources(srcs, exe, flags); err != nil {
+		recommendPackage(proj.Includes)
+		platformHints(proj.Includes)
+		return err
+	}
+	return nil
 }
 
 // compileSources compiles and links the given source files into the output executable.
