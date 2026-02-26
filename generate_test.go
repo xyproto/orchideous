@@ -42,7 +42,7 @@ func TestPkgNameFromInclude(t *testing.T) {
 	}{
 		{"SDL2/SDL.h", "sdl2"},
 		{"SDL2/SDL_image.h", "SDL2_image"},
-		{"gtk/gtk.h", "gtk4"},
+		{"gtk/gtk.h", bestGtkPkg()},
 		{"GL/glew.h", "glew"},
 		{"GLFW/glfw3.h", "glfw3"},
 		{"SFML/Graphics.hpp", "sfml-graphics"},

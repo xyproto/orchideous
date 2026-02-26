@@ -62,6 +62,32 @@ func resolveIncludeFlags(inc string) string {
 	return pkgConfigFlags(pkgName)
 }
 
+// bestGtkPkg returns the best available GTK pkg-config name, preferring the newest version.
+func bestGtkPkg() string {
+	for _, pkg := range []string{"gtk4", "gtk+-3.0", "gtk+-2.0"} {
+		if pkgConfigFlags(pkg) != "" {
+			return pkg
+		}
+	}
+	return "gtk4"
+}
+
+// bestVtePkg returns the best available VTE pkg-config name, matching the GTK version in use.
+func bestVtePkg() string {
+	gtk := bestGtkPkg()
+	if gtk == "gtk4" {
+		if pkgConfigFlags("vte-2.91-gtk4") != "" {
+			return "vte-2.91-gtk4"
+		}
+	}
+	for _, pkg := range []string{"vte-2.91-gtk4", "vte-2.91"} {
+		if pkgConfigFlags(pkg) != "" {
+			return pkg
+		}
+	}
+	return "vte-2.91-gtk4"
+}
+
 // pkgNameFromInclude guesses the pkg-config package name from an include path.
 func pkgNameFromInclude(inc string) string {
 	lower := strings.ToLower(inc)
@@ -73,7 +99,8 @@ func pkgNameFromInclude(inc string) string {
 		"sdl2/sdl_mixer.h":    "SDL2_mixer",
 		"sdl2/sdl_ttf.h":      "SDL2_ttf",
 		"sdl2/sdl_net.h":      "SDL2_net",
-		"gtk/gtk.h":           "gtk4",
+		"gtk/gtk.h":           bestGtkPkg(),
+		"vte/vte.h":           bestVtePkg(),
 		"gl/gl.h":             "gl",
 		"gl/glew.h":           "glew",
 		"gl/glut.h":           "glu",
