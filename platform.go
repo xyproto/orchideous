@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/xyproto/files"
 )
 
 // skipPackages are packages that should be skipped when resolving includes.
@@ -21,7 +23,7 @@ var cachedPCFiles = make(map[string][]string)
 func detectPlatformType() string {
 	switch runtime.GOOS {
 	case "darwin":
-		if hasCommand("brew") {
+		if files.WhichCached("brew") != "" {
 			return "brew"
 		}
 	case "freebsd":
@@ -451,7 +453,7 @@ func recommendPackage(missingIncludes []string) {
 		}
 		switch platform {
 		case "arch":
-			if hasCommand("pkgfile") {
+			if files.WhichCached("pkgfile") != "" {
 				out, err := exec.Command("sh", "-c", "LC_ALL=C pkgfile "+inc+" 2>/dev/null").Output()
 				if err == nil {
 					for line := range strings.SplitSeq(strings.TrimSpace(string(out)), "\n") {
@@ -468,7 +470,7 @@ func recommendPackage(missingIncludes []string) {
 				}
 			}
 		case "deb":
-			if hasCommand("apt-file") {
+			if files.WhichCached("apt-file") != "" {
 				out, err := exec.Command("sh", "-c", "LC_ALL=C apt-file find -Fl "+inc+" 2>/dev/null").Output()
 				if err == nil {
 					pkg := strings.TrimSpace(string(out))

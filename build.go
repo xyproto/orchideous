@@ -520,3 +520,11 @@ func mustGetwd() string {
 	}
 	return dir
 }
+
+// dotSlash prepends ./ to a relative path to make it executable.
+func dotSlash(name string) string {
+	if filepath.IsAbs(name) || strings.HasPrefix(name, "."+string(os.PathSeparator)) || strings.HasPrefix(name, "./") {
+		return name
+	}
+	return "." + string(os.PathSeparator) + name
+}

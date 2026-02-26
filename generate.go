@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/xyproto/files"
 )
 
 // doCMake generates a CMakeLists.txt file.
@@ -199,7 +201,7 @@ func doNinja() error {
 
 	// Run cmake in build/
 	cmakeArgs := []string{"-G", "Ninja", ".."}
-	if hasCommand("ccache") {
+	if files.WhichCached("ccache") != "" {
 		cmakeArgs = []string{"-D", "CMAKE_CXX_COMPILER_LAUNCHER=ccache", "-G", "Ninja", ".."}
 	}
 	cmake := exec.Command("cmake", cmakeArgs...)
