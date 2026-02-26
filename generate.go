@@ -1,4 +1,4 @@
-package main
+package orchideous
 
 import (
 	"fmt"
@@ -34,7 +34,7 @@ func doCMake(opts BuildOptions) error {
 	srcs := append([]string{proj.MainSource}, proj.DepSources...)
 	incPaths := flags.IncPaths
 
-	fmt.Fprintf(f, "# Generated using cbuild from https://github.com/xyproto/cxx, %s\n", date)
+	fmt.Fprintf(f, "# Generated using oh from https://github.com/xyproto/orchideous, %s\n", date)
 	fmt.Fprintln(f, "cmake_minimum_required(VERSION 3.12)")
 	fmt.Fprintf(f, "project(%s)\n", exe)
 	if !proj.IsC {
@@ -184,7 +184,7 @@ func doPro(opts BuildOptions) error {
 // doNinja builds the project using CMake + Ninja.
 func doNinja() error {
 	if !fileExists("CMakeLists.txt") {
-		return fmt.Errorf("could not find CMakeLists.txt (run 'cbuild cmake' first)")
+		return fmt.Errorf("could not find CMakeLists.txt (run 'oh cmake' first)")
 	}
 
 	if _, err := exec.LookPath("ninja"); err != nil {
@@ -333,7 +333,7 @@ func doPkg() error {
 	return doInstall()
 }
 
-// doExport generates a standalone Makefile and build.sh for users without cbuild.
+// doExport generates a standalone Makefile and build.sh for users without oh.
 func doExport() error {
 	// Generate Makefile
 	if err := doMakeFile(); err != nil {
@@ -513,7 +513,7 @@ func filterNonLinkFlags(flags []string) []string {
 // doNinjaInstall installs from a ninja build.
 func doNinjaInstall() error {
 	if !fileExists("build") {
-		return fmt.Errorf("no build/ directory found (run 'cbuild cmake ninja' first)")
+		return fmt.Errorf("no build/ directory found (run 'oh cmake ninja' first)")
 	}
 	if _, err := exec.LookPath("ninja"); err != nil {
 		return fmt.Errorf("ninja not found in PATH")

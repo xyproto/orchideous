@@ -1,4 +1,4 @@
-package main
+package orchideous
 
 import (
 	"fmt"
@@ -8,10 +8,10 @@ import (
 	"strings"
 )
 
-const version = "3.3.3"
+const versionString = "oh 1.0.0"
 
-func main() {
-	// Handle -C <dir> first, then re-dispatch
+// Main is the entry point for the oh command.
+func Main() {
 	args := os.Args[1:]
 	if len(args) >= 2 && args[0] == "-C" {
 		if err := os.Chdir(args[1]); err != nil {
@@ -35,7 +35,7 @@ func main() {
 	case "-h", "--help", "help":
 		printHelp()
 	case "version", "--version":
-		fmt.Printf("cbuild %s\n", version)
+		fmt.Println(versionString)
 	case "build":
 		exitOnErr(doBuild(BuildOptions{}))
 	case "rebuild":
@@ -127,50 +127,50 @@ func main() {
 }
 
 func printHelp() {
-	fmt.Printf(`cbuild %s
+	fmt.Printf(`%s
 
-cbuild              - build the project
-cbuild run          - build and run
-cbuild debug        - debug build and launch debugger (gdb/cgdb)
-cbuild debugbuild   - debug build (without launching debugger)
-cbuild debugnosan   - debug build (without sanitizers)
-cbuild opt          - optimized build
-cbuild strict       - build with strict warning flags
-cbuild sloppy       - build with sloppy flags
-cbuild small        - build a smaller executable
-cbuild tiny         - build a tiny executable (+ sstrip/upx)
-cbuild clang        - build using clang++
-cbuild clangdebug   - debug build using clang++ (launches lldb)
-cbuild clangstrict  - use clang++ and strict flags
-cbuild clangsloppy  - use clang++ and sloppy flags
-cbuild clangrebuild - clean and build with clang++
-cbuild clangtest    - build and run tests with clang++
-cbuild clean        - remove built files
-cbuild fastclean    - only remove executable and *.o
-cbuild rebuild      - clean and build
-cbuild test         - build and run tests
-cbuild testbuild    - build tests (without running)
-cbuild rec          - profile-guided optimization (build, run, rebuild)
-cbuild fmt          - format source code with clang-format
-cbuild cmake        - generate CMakeLists.txt
-cbuild cmake ninja  - generate CMakeLists.txt and build with ninja
-cbuild ninja        - build using existing CMakeLists.txt and ninja
-cbuild ninja_install- install from ninja build
-cbuild ninja_clean  - clean ninja build
-cbuild pro          - generate QtCreator project file
-cbuild install      - install the project (PREFIX, DESTDIR)
-cbuild pkg          - package the project into pkg/
-cbuild export       - export a standalone Makefile and build.sh
-cbuild make         - generate a standalone Makefile
-cbuild script       - generate build.sh and clean.sh
-cbuild valgrind     - build and profile with valgrind
-cbuild win64        - cross-compile for 64-bit Windows
-cbuild smallwin64   - small win64 build
-cbuild tinywin64    - tiny win64 build
-cbuild zap          - build using zapcc++
-cbuild version      - show version
-cbuild -C <dir> ... - run in the given directory
-`, version)
+oh              - build the project
+oh run          - build and run
+oh debug        - debug build and launch debugger (gdb/cgdb)
+oh debugbuild   - debug build (without launching debugger)
+oh debugnosan   - debug build (without sanitizers)
+oh opt          - optimized build
+oh strict       - build with strict warning flags
+oh sloppy       - build with sloppy flags
+oh small        - build a smaller executable
+oh tiny         - build a tiny executable (+ sstrip/upx)
+oh clang        - build using clang++
+oh clangdebug   - debug build using clang++ (launches lldb)
+oh clangstrict  - use clang++ and strict flags
+oh clangsloppy  - use clang++ and sloppy flags
+oh clangrebuild - clean and build with clang++
+oh clangtest    - build and run tests with clang++
+oh clean        - remove built files
+oh fastclean    - only remove executable and *.o
+oh rebuild      - clean and build
+oh test         - build and run tests
+oh testbuild    - build tests (without running)
+oh rec          - profile-guided optimization (build, run, rebuild)
+oh fmt          - format source code with clang-format
+oh cmake        - generate CMakeLists.txt
+oh cmake ninja  - generate CMakeLists.txt and build with ninja
+oh ninja        - build using existing CMakeLists.txt and ninja
+oh ninja_install- install from ninja build
+oh ninja_clean  - clean ninja build
+oh pro          - generate QtCreator project file
+oh install      - install the project (PREFIX, DESTDIR)
+oh pkg          - package the project into pkg/
+oh export       - export a standalone Makefile and build.sh
+oh make         - generate a standalone Makefile
+oh script       - generate build.sh and clean.sh
+oh valgrind     - build and profile with valgrind
+oh win64        - cross-compile for 64-bit Windows
+oh smallwin64   - small win64 build
+oh tinywin64    - tiny win64 build
+oh zap          - build using zapcc++
+oh version      - show version
+oh -C <dir> ... - run in the given directory
+`, versionString)
 }
 
 func exitOnErr(err error) {
