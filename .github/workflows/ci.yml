@@ -3,16 +3,28 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "*.md"
+      - "*.txt"
+      - "*.log"
+      - "*.png"
+      - "*.svg"
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "*.md"
+      - "*.txt"
+      - "*.log"
+      - "*.png"
+      - "*.svg"
 
 jobs:
-  build-and-test:
+  # ── Ubuntu (gcc + clang, full example builds) ──────────────────────
+  ubuntu:
     strategy:
       matrix:
-        os: [ubuntu-latest]
         compiler: [gcc, clang]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
 
@@ -69,7 +81,7 @@ jobs:
       - name: Build examples (best effort)
         run: |
           failed=""
-          # Skip examples needing packages not in Ubuntu repos
+          # Skip examples needing packages not in Ubuntu repos or with incompatible versions
           skip="bisqwit entities raylib raylib5 reactphysics rtaudio sfml sfml_audio win64crate"
           for d in examples/*/; do
             name=$(basename "$d")
@@ -87,3 +99,175 @@ jobs:
             echo "Failed:$failed"
             exit 1
           fi
+
+  # ── Arch Linux (Docker, full example builds) ───────────────────────
+  archlinux:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Install base tools
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm --needed \
+            base-devel git go pkg-config \
+            boost fcgi freeglut glew glfw glibmm glm glu \
+            gtk4 libconfig libpipewire libx11 openal qt6-base \
+            raylib reactphysics3d rtaudio sdl2-compat sdl2_mixer \
+            sfml vte4 vulkan-headers vulkan-icd-loader
+
+      - uses: actions/checkout@v6
+
+      - name: Build
+        run: go build -v -o oh ./cmd/oh
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test -v -count=1 ./...
+
+      - name: Smoke test (hello example)
+        run: |
+          ./oh -C examples/hello clean
+          ./oh -C examples/hello build
+          ./oh -C examples/hello test
+          ./oh -C examples/hello clean
+
+      - name: Build examples
+        run: |
+          failed=""
+          skip="win64crate"
+          for d in examples/*/; do
+            name=$(basename "$d")
+            echo "$skip" | grep -qw "$name" && { printf "=== %-30s SKIP\n" "$d"; continue; }
+            printf "=== %-30s" "$d"
+            if ./oh -C "$d" build > /dev/null 2>&1; then
+              echo "OK"
+            else
+              echo "FAIL"
+              failed="$failed $d"
+            fi
+          done
+          if [ -n "$failed" ]; then
+            echo ""
+            echo "Failed:$failed"
+            exit 1
+          fi
+
+  # ── macOS ──────────────────────────────────────────────────────────
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25"
+
+      - name: Install dependencies
+        run: brew install pkg-config
+
+      - name: Build
+        run: go build -v -o oh ./cmd/oh
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test -v -count=1 ./...
+
+      - name: Smoke test (hello example)
+        run: |
+          ./oh -C examples/hello clean
+          ./oh -C examples/hello build
+          ./oh -C examples/hello test
+          ./oh -C examples/hello clean
+
+  # ── Windows (MSYS2 / UCRT64) ──────────────────────────────────────
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >
+            git
+            mingw-w64-ucrt-x86_64-go
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-pkg-config
+
+      - name: Build
+        run: go build -v -o oh.exe ./cmd/oh
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test -v -count=1 ./...
+
+      - name: Smoke test (hello example)
+        run: |
+          ./oh.exe -C examples/hello clean
+          ./oh.exe -C examples/hello build
+          ./oh.exe -C examples/hello clean
+
+  # ── FreeBSD ────────────────────────────────────────────────────────
+  freebsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: vmactions/freebsd-vm@v1
+        with:
+          prepare: |
+            pkg install -y go pkgconf
+          run: |
+            go build -v -o oh ./cmd/oh
+            go vet ./...
+            go test -v -count=1 ./...
+            ./oh -C examples/hello clean
+            ./oh -C examples/hello build
+            ./oh -C examples/hello test
+            ./oh -C examples/hello clean
+
+  # ── OpenBSD ────────────────────────────────────────────────────────
+  openbsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: vmactions/openbsd-vm@v1
+        with:
+          prepare: |
+            pkg_add go
+          run: |
+            go build -v -o oh ./cmd/oh
+            go vet ./...
+            go test -v -count=1 ./...
+            ./oh -C examples/hello clean
+            CXX=eg++ ./oh -C examples/hello build
+            ./oh -C examples/hello test
+            ./oh -C examples/hello clean
+
+  # ── NetBSD ─────────────────────────────────────────────────────────
+  netbsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: vmactions/netbsd-vm@v1
+        with:
+          prepare: |
+            pkgin -y install go pkgconf
+          run: |
+            go build -v -o oh ./cmd/oh
+            go vet ./...
+            go test -v -count=1 ./...
+            ./oh -C examples/hello clean
+            ./oh -C examples/hello build
+            ./oh -C examples/hello test
+            ./oh -C examples/hello clean
