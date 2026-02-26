@@ -1,5 +1,7 @@
 # Orchideous
 
+[![CI](https://github.com/xyproto/orchideous/actions/workflows/ci.yml/badge.svg)](https://github.com/xyproto/orchideous/actions/workflows/ci.yml)
+
 A Go port of [xyproto/cxx](https://github.com/xyproto/cxx) — an auto-build tool for C and C++ projects. LLMs was used when porting.
 
 ## Usage
