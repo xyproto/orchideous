@@ -30,7 +30,7 @@ jobs:
           fi
 
       - name: Build
-        run: go build -v -o orchideous .
+        run: go build -v -o oh ./cmd/oh
 
       - name: Vet
         run: go vet ./...
@@ -40,7 +40,7 @@ jobs:
 
       - name: Smoke test (hello example)
         run: |
-          ./orchideous -C examples/hello clean
-          ./orchideous -C examples/hello build
-          ./orchideous -C examples/hello test
-          ./orchideous -C examples/hello clean
+          ./oh -C examples/hello clean
+          ./oh -C examples/hello build
+          ./oh -C examples/hello test
+          ./oh -C examples/hello clean
