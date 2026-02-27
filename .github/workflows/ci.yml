@@ -27,9 +27,9 @@ jobs:
         compiler: [gcc, clang]
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: "1.24"
 
@@ -123,7 +123,7 @@ jobs:
     steps:
       - name: Install git
         run: pacman --disable-sandbox -Sy --noconfirm git
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install dependencies
         run: |
           pacman --disable-sandbox -Sy --noconfirm archlinux-keyring
@@ -177,9 +177,9 @@ jobs:
   macos:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: "1.24"
 
@@ -208,7 +208,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: msys2/setup-msys2@v2
         with:
@@ -233,13 +233,14 @@ jobs:
         run: |
           ./oh.exe -C examples/hello clean
           ./oh.exe -C examples/hello build
+          ./oh.exe -C examples/hello test
           ./oh.exe -C examples/hello clean
 
   # ── FreeBSD ────────────────────────────────────────────────────────
   freebsd:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: vmactions/freebsd-vm@v1
         with:
           prepare: |
@@ -257,7 +258,7 @@ jobs:
   openbsd:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: vmactions/openbsd-vm@v1
         with:
           prepare: |
@@ -277,13 +278,15 @@ jobs:
   netbsd:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: vmactions/netbsd-vm@v1
         with:
           prepare: |
-            pkg_add go pkgconf
+            pkg_add go pkgconf clang
           run: |
             export PATH="/usr/pkg/bin:$PATH"
+            export CXX=clang++
+            export CC=clang
             go build -v -buildvcs=false -o oh ./cmd/oh
             go vet ./...
             go test -v -count=1 ./...
