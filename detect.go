@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
 
@@ -427,10 +426,7 @@ func (p *Project) resolveCommonDeps() {
 				for _, ext := range SourceExts {
 					candidate := filepath.Join(cp, base+ext)
 					if fileExists(candidate) {
-						key := candidate
-						if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
-							key = strings.ToLower(filepath.Clean(candidate))
-						}
+						key := normalizePath(candidate)
 						if !existingDeps[key] {
 							p.DepSources = append(p.DepSources, candidate)
 							existingDeps[key] = true
@@ -516,11 +512,7 @@ func fileExists(path string) bool {
 func toSet(strs []string) map[string]bool {
 	m := make(map[string]bool)
 	for _, s := range strs {
-		key := s
-		if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
-			key = strings.ToLower(filepath.Clean(s))
-		}
-		m[key] = true
+		m[normalizePath(s)] = true
 	}
 	return m
 }
@@ -529,14 +521,10 @@ func uniqueStrings(strs []string) []string {
 	seen := make(map[string]bool)
 	var result []string
 	for _, s := range strs {
-		clean := filepath.Clean(s)
-		key := clean
-		if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
-			key = strings.ToLower(clean)
-		}
-		if !seen[key] {
-			seen[key] = true
-			result = append(result, clean)
+		norm := normalizePath(s)
+		if !seen[norm] {
+			seen[norm] = true
+			result = append(result, filepath.Clean(s))
 		}
 	}
 	return result

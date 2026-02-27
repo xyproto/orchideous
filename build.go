@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
 
@@ -81,7 +80,7 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 		// Add sanitizers unless disabled
 		if !opts.NoSanitizers {
 			bf.LDFlags = append(bf.LDFlags, "-fsanitize=address")
-			if runtime.GOOS != "darwin" {
+			if !isDarwin() {
 				if isCompilerClang(compiler) {
 					bf.CFlags = append(bf.CFlags, "-static-libsan")
 				} else if isCompilerGCC(compiler) {
@@ -138,14 +137,7 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 
 	// C-specific defines
 	if proj.IsC {
-		switch runtime.GOOS {
-		case "linux":
-			bf.Defines = append(bf.Defines, "-D_GNU_SOURCE")
-		case "freebsd", "openbsd", "netbsd":
-			bf.Defines = append(bf.Defines, "-D_BSD_SOURCE")
-		default:
-			bf.Defines = append(bf.Defines, "-D_XOPEN_SOURCE=700")
-		}
+		bf.Defines = append(bf.Defines, platformCDefine)
 	}
 
 	// OpenMP
@@ -300,22 +292,11 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 		}
 	}
 
-	// NetBSD
-	if runtime.GOOS == "netbsd" {
-		bf.LDFlags = append(bf.LDFlags, "-L/usr/pkg/lib")
-	}
+	// Platform-specific library paths (e.g. -L/usr/pkg/lib on NetBSD)
+	bf.LDFlags = append(bf.LDFlags, extraLDLibPaths()...)
 
-	// OpenBSD
-	if runtime.GOOS == "openbsd" {
-		bf.LDFlags = append(bf.LDFlags, "-L/usr/local/lib")
-	}
-
-	// --as-needed (not on macOS, use -zignore on Solaris)
-	if runtime.GOOS == "solaris" || runtime.GOOS == "illumos" {
-		bf.LDFlags = prependUnique(bf.LDFlags, "-Wl,-zignore")
-	} else if runtime.GOOS != "darwin" {
-		bf.LDFlags = prependUnique(bf.LDFlags, "-Wl,--as-needed")
-	}
+	// --as-needed (platform-specific: omitted on macOS, -zignore on Solaris)
+	bf.LDFlags = prependAsNeededFlag(bf.LDFlags)
 
 	// Append user CXXFLAGS from environment
 	if userFlags := os.Getenv("CXXFLAGS"); userFlags != "" {
@@ -517,12 +498,4 @@ func mustGetwd() string {
 		return "."
 	}
 	return dir
-}
-
-// dotSlash prepends ./ to a relative path to make it executable.
-func dotSlash(name string) string {
-	if filepath.IsAbs(name) || strings.HasPrefix(name, "./") || (runtime.GOOS == "windows" && strings.HasPrefix(name, ".\\")) {
-		return name
-	}
-	return "./" + name
 }

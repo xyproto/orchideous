@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"slices"
 	"strings"
 )
@@ -169,7 +168,7 @@ func pkgNameFromInclude(inc string) string {
 // resolveExtraFlags returns additional link/compile flags for special includes.
 func resolveExtraFlags(includes []string, win64 bool) (cflags, ldflags []string) {
 	hasPkg := hasPkgConfig()
-	isDarwin := runtime.GOOS == "darwin"
+	darwin := isDarwin()
 	hasFrameworks := fileExists("/Library/Frameworks")
 	hasSysFrameworks := fileExists("/System/Library/Frameworks")
 
@@ -331,7 +330,7 @@ func resolveExtraFlags(includes []string, win64 bool) (cflags, ldflags []string)
 		}
 
 		// macOS framework detection for arbitrary includes
-		if isDarwin && hasFrameworks && !win64 {
+		if darwin && hasFrameworks && !win64 {
 			firstWord := lower
 			if strings.Contains(inc, "/") {
 				firstWord = strings.Split(lower, "/")[0]
@@ -507,11 +506,6 @@ func installDirDefines(prefix string) []string {
 		}
 	}
 	return defs
-}
-
-// isLinux returns true if running on Linux.
-func isLinux() bool {
-	return runtime.GOOS == "linux"
 }
 
 // isCompilerGCC checks if a compiler path looks like gcc/g++.
