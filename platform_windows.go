@@ -11,3 +11,6 @@ func extraLDLibPaths() []string { return nil }
 
 // Windows does not use --as-needed.
 func prependAsNeededFlag(ldflags []string) []string { return ldflags }
+
+// detectPlatformType returns "generic" on Windows.
+func detectPlatformType() string { return "generic" }

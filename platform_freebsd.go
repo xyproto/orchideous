@@ -1,4 +1,4 @@
-//go:build netbsd
+//go:build freebsd
 
 package orchideous
 
@@ -7,8 +7,16 @@ func isDarwin() bool { return false }
 
 const platformCDefine = "-D_BSD_SOURCE"
 
-func extraLDLibPaths() []string { return []string{"-L/usr/pkg/lib"} }
+func extraLDLibPaths() []string { return nil }
 
 func prependAsNeededFlag(ldflags []string) []string {
 	return prependUnique(ldflags, "-Wl,--as-needed")
+}
+
+// detectPlatformType returns "freebsd" when pkg(8) is present.
+func detectPlatformType() string {
+	if fileExists("/usr/sbin/pkg") {
+		return "freebsd"
+	}
+	return "generic"
 }

@@ -2,6 +2,8 @@
 
 package orchideous
 
+import "github.com/xyproto/files"
+
 func isLinux() bool  { return false }
 func isDarwin() bool { return true }
 
@@ -11,3 +13,11 @@ func extraLDLibPaths() []string { return nil }
 
 // macOS linker does not support --as-needed.
 func prependAsNeededFlag(ldflags []string) []string { return ldflags }
+
+// detectPlatformType returns "brew" when Homebrew is available, else "generic".
+func detectPlatformType() string {
+	if files.WhichCached("brew") != "" {
+		return "brew"
+	}
+	return "generic"
+}

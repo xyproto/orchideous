@@ -12,3 +12,6 @@ func extraLDLibPaths() []string { return nil }
 func prependAsNeededFlag(ldflags []string) []string {
 	return prependUnique(ldflags, "-Wl,-zignore")
 }
+
+// detectPlatformType returns "generic" on Solaris/illumos.
+func detectPlatformType() string { return "generic" }

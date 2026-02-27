@@ -12,3 +12,6 @@ func extraLDLibPaths() []string { return nil }
 func prependAsNeededFlag(ldflags []string) []string {
 	return prependUnique(ldflags, "-Wl,--as-needed")
 }
+
+// detectPlatformType returns "generic" on platforms without a known package manager.
+func detectPlatformType() string { return "generic" }
