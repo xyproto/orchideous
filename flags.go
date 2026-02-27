@@ -478,6 +478,13 @@ func appendUnique(slice []string, val string) []string {
 	return append(slice, val)
 }
 
+func prependUnique(slice []string, val string) []string {
+	if slices.Contains(slice, val) {
+		return slice
+	}
+	return append([]string{val}, slice...)
+}
+
 // installDirDefines generates -D flags pointing to installed paths.
 func installDirDefines(prefix string) []string {
 	var defs []string

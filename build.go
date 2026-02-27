@@ -311,12 +311,10 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 	}
 
 	// --as-needed (not on macOS, use -zignore on Solaris)
-	if len(bf.LDFlags) > 0 {
-		if runtime.GOOS == "solaris" || runtime.GOOS == "illumos" {
-			bf.LDFlags = appendUnique(bf.LDFlags, "-Wl,-zignore")
-		} else if runtime.GOOS != "darwin" {
-			bf.LDFlags = appendUnique(bf.LDFlags, "-Wl,--as-needed")
-		}
+	if runtime.GOOS == "solaris" || runtime.GOOS == "illumos" {
+		bf.LDFlags = prependUnique(bf.LDFlags, "-Wl,-zignore")
+	} else if runtime.GOOS != "darwin" {
+		bf.LDFlags = prependUnique(bf.LDFlags, "-Wl,--as-needed")
 	}
 
 	// Append user CXXFLAGS from environment
