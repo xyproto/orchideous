@@ -304,7 +304,7 @@ The formatting style is fixed and not configurable, on purpose.
 
 ## Requirements
 
-* `g++` with C++20 support (or later)
+* `g++` with C++23 support (or later)
 * `pkg-config`
 * `make` (for the project Makefile, not for building C++ projects)
 
