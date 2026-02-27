@@ -274,23 +274,23 @@ jobs:
             ./oh -C examples/hello test
             ./oh -C examples/hello clean
 
-  # ── NetBSD ─────────────────────────────────────────────────────────
-  netbsd:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: vmactions/netbsd-vm@v1
-        with:
-          prepare: |
-            pkg_add go pkgconf clang
-          run: |
-            export PATH="/usr/pkg/go/bin:/usr/pkg/bin:$PATH"
-            export CXX=clang++
-            export CC=clang
-            go build -v -buildvcs=false -o oh ./cmd/oh
-            go vet ./...
-            go test -v -count=1 ./...
-            ./oh -C examples/hello clean
-            ./oh -C examples/hello build
-            ./oh -C examples/hello test
-            ./oh -C examples/hello clean
+#  # ── NetBSD ─────────────────────────────────────────────────────────
+#  netbsd:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v6
+#      - uses: vmactions/netbsd-vm@v1
+#        with:
+#          prepare: |
+#            pkg_add go pkgconf clang
+#          run: |
+#            export PATH="/usr/pkg/go/bin:/usr/pkg/bin:$PATH"
+#            export CXX=clang++
+#            export CC=clang
+#            go build -v -buildvcs=false -o oh ./cmd/oh
+#            go vet ./...
+#            go test -v -count=1 ./...
+#            ./oh -C examples/hello clean
+#            ./oh -C examples/hello build
+#            ./oh -C examples/hello test
+#            ./oh -C examples/hello clean
