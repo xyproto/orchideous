@@ -74,6 +74,10 @@ func platformResolve(platform, incPath, cxx string) string {
 		return openbsdIncludePathToFlags(incPath)
 	case "brew":
 		return brewIncludePathToFlags(incPath)
+	case "msys2":
+		return msys2IncludePathToFlags(incPath)
+	case "vcpkg":
+		return vcpkgIncludePathToFlags(incPath)
 	default:
 		return genericIncludePathToFlags(incPath)
 	}
@@ -81,18 +85,32 @@ func platformResolve(platform, incPath, cxx string) string {
 
 // findIncludeFile searches for an include file under a system include directory.
 func findIncludeFile(sysDir, inc string) string {
-	out, err := exec.Command("find", sysDir, "-maxdepth", "3", "-type", "f",
-		"-wholename", "*/"+inc).CombinedOutput()
-	if err != nil {
-		return ""
+	// Direct check first (works on all platforms)
+	direct := filepath.Join(sysDir, inc)
+	if fileExists(direct) {
+		return direct
 	}
-	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
-	for i := len(lines) - 1; i >= 0; i-- {
-		if lines[i] != "" {
-			return strings.TrimSpace(lines[i])
+	// Try recursive walk (up to 3 levels deep) — portable alternative to Unix find
+	maxDepth := 3
+	target := filepath.ToSlash(inc)
+	var found string
+	filepath.WalkDir(sysDir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return filepath.SkipDir
 		}
-	}
-	return ""
+		// Enforce max depth
+		rel, _ := filepath.Rel(sysDir, path)
+		depth := strings.Count(filepath.ToSlash(rel), "/")
+		if d.IsDir() && depth >= maxDepth {
+			return filepath.SkipDir
+		}
+		if !d.IsDir() && strings.HasSuffix(filepath.ToSlash(path), target) {
+			found = path
+			return filepath.SkipAll
+		}
+		return nil
+	})
+	return found
 }
 
 // pcFilesToFlags takes a list of .pc file paths and returns combined pkg-config flags.

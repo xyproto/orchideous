@@ -9,31 +9,7 @@ import (
 	"strings"
 )
 
-// systemIncludeDirs returns the system include directories.
-func systemIncludeDirs() []string {
-	dirs := []string{}
-	if fileExists("/usr/include") {
-		dirs = append(dirs, "/usr/include")
-	}
-	cxx := findCompiler(false, false)
-	if cxx != "" {
-		out, err := exec.Command(cxx, "-dumpmachine").Output()
-		if err == nil {
-			machine := strings.TrimSpace(string(out))
-			machineDir := "/usr/include/" + machine
-			if fileExists(machineDir) {
-				dirs = append(dirs, machineDir)
-			}
-		}
-	}
-	if fileExists("/usr/local/include") {
-		dirs = append(dirs, "/usr/local/include")
-	}
-	if fileExists("/usr/pkg/include") {
-		dirs = append(dirs, "/usr/pkg/include")
-	}
-	return dirs
-}
+// systemIncludeDirs and compilerSupportsStd are in sysinclude_*.go files.
 
 // pkgConfigFlags runs pkg-config for a given package name and returns the flags.
 func pkgConfigFlags(pkg string) string {
@@ -433,6 +409,7 @@ func dirDefines() []string {
 		"shaders":   "SHADERDIR",
 		"shader":    "SHADERDIR",
 		"share":     "SHAREDIR",
+		"shared":    "SHAREDIR",
 		"resources": "RESOURCEDIR",
 		"resource":  "RESOURCEDIR",
 		"res":       "RESDIR",
@@ -453,12 +430,7 @@ func dirDefines() []string {
 	return defs
 }
 
-// compilerSupportsStd checks if the compiler supports a given -std= flag.
-func compilerSupportsStd(compiler, std string) bool {
-	cmd := exec.Command("sh", "-c",
-		"echo 'int main(){}' | "+compiler+" -std="+std+" -x c++ -fsyntax-only - 2>/dev/null")
-	return cmd.Run() == nil
-}
+// compilerSupportsStd and systemIncludeDirs are in sysinclude_*.go files.
 
 // bestStdFlag returns the best C++ standard flag the compiler supports.
 func bestStdFlag(compiler string) string {
@@ -493,6 +465,7 @@ func installDirDefines(prefix string) []string {
 		"shaders":   "SHADERDIR",
 		"shader":    "SHADERDIR",
 		"share":     "SHAREDIR",
+		"shared":    "SHAREDIR",
 		"resources": "RESOURCEDIR",
 		"resource":  "RESOURCEDIR",
 		"res":       "RESDIR",

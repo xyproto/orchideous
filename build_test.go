@@ -206,6 +206,33 @@ func TestAssembleFlags_CXXFLAGS(t *testing.T) {
 	assertFlagPresent(t, flags.CFlags, "-march=native")
 }
 
+func TestAssembleFlags_CFLAGS(t *testing.T) {
+	withTempDir(t)
+	writeFile(t, "main.c", `int main() { return 0; }`)
+
+	os.Setenv("CFLAGS", "-DTEST_CFLAG -march=native")
+	defer os.Unsetenv("CFLAGS")
+
+	proj := detectProject()
+	flags := assembleFlags(proj, BuildOptions{})
+
+	assertFlagPresent(t, flags.CFlags, "-DTEST_CFLAG")
+	assertFlagPresent(t, flags.CFlags, "-march=native")
+}
+
+func TestAssembleFlags_LDFLAGS(t *testing.T) {
+	withTempDir(t)
+	writeFile(t, "main.cpp", `int main() { return 0; }`)
+
+	os.Setenv("LDFLAGS", "-Wl,-z,relro,-z,now")
+	defer os.Unsetenv("LDFLAGS")
+
+	proj := detectProject()
+	flags := assembleFlags(proj, BuildOptions{})
+
+	assertFlagPresent(t, flags.LDFlags, "-Wl,-z,relro,-z,now")
+}
+
 func TestBuildCompileArgs(t *testing.T) {
 	flags := BuildFlags{
 		Compiler: "g++",

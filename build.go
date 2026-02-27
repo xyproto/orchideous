@@ -27,18 +27,21 @@ type BuildOptions struct {
 
 // BuildFlags holds the assembled compiler and linker flags.
 type BuildFlags struct {
-	Compiler string
-	Std      string
-	CFlags   []string
-	LDFlags  []string
-	Defines  []string
-	IncPaths []string
+	Compiler    string
+	Std         string
+	CFlags      []string
+	LDFlags     []string
+	Defines     []string
+	IncPaths    []string
+	DockerImage string // if set, compile via "docker run" with this image
 }
 
 // assembleFlags creates the full set of build flags for a project.
 func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 	// Determine if this is win64 (from options or detected from source)
 	win64 := opts.Win64 || proj.HasWin64
+
+	var bf BuildFlags
 
 	// Find the compiler
 	var compiler string
@@ -49,6 +52,23 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 	}
 	if compiler == "" && win64 {
 		compiler = findWin64Compiler(proj.IsC)
+		if compiler == "" {
+			// Fallback: use Docker with mingw image
+			if _, err := exec.LookPath("docker"); err == nil {
+				const dockerImage = "jhasse/mingw:latest"
+				fmt.Fprintf(os.Stderr, "warning: x86_64-w64-mingw32-g++ not found, using Docker image: %s\n", dockerImage)
+				if proj.IsC {
+					compiler = "x86_64-w64-mingw32-gcc"
+				} else {
+					compiler = "x86_64-w64-mingw32-g++"
+				}
+				bf.DockerImage = dockerImage
+			} else {
+				fmt.Fprintln(os.Stderr, "error: no mingw cross-compiler found for win64 and docker is not available")
+				fmt.Fprintln(os.Stderr, "Install x86_64-w64-mingw32-g++ or docker to cross-compile for Windows.")
+				os.Exit(1)
+			}
+		}
 	}
 	if compiler == "" {
 		compiler = findCompiler(opts.Clang, proj.IsC)
@@ -58,7 +78,6 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 		os.Exit(1)
 	}
 
-	var bf BuildFlags
 	bf.Compiler = compiler
 
 	// Determine standard
@@ -79,6 +98,7 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 		bf.CFlags = append(bf.CFlags, "-O0", "-g", "-fno-omit-frame-pointer")
 		// Add sanitizers unless disabled
 		if !opts.NoSanitizers {
+			bf.CFlags = append(bf.CFlags, "-fsanitize=address")
 			bf.LDFlags = append(bf.LDFlags, "-fsanitize=address")
 			if !isDarwin() {
 				if isCompilerClang(compiler) {
@@ -97,7 +117,7 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 		}
 	} else if opts.Opt {
 		bf.CFlags = append(bf.CFlags, "-Ofast", "-flto")
-		bf.LDFlags = append(bf.LDFlags, "-Wl,-flto")
+		bf.LDFlags = append(bf.LDFlags, "-flto")
 	} else if proj.HasOpenMP {
 		bf.CFlags = append(bf.CFlags, "-O3")
 	} else {
@@ -298,9 +318,20 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 	// --as-needed (platform-specific: omitted on macOS, -zignore on Solaris)
 	bf.LDFlags = prependAsNeededFlag(bf.LDFlags)
 
-	// Append user CXXFLAGS from environment
-	if userFlags := os.Getenv("CXXFLAGS"); userFlags != "" {
-		bf.CFlags = append(bf.CFlags, strings.Fields(userFlags)...)
+	// Append user compile flags from environment
+	if proj.IsC {
+		if userFlags := os.Getenv("CFLAGS"); userFlags != "" {
+			bf.CFlags = append(bf.CFlags, strings.Fields(userFlags)...)
+		}
+	} else {
+		if userFlags := os.Getenv("CXXFLAGS"); userFlags != "" {
+			bf.CFlags = append(bf.CFlags, strings.Fields(userFlags)...)
+		}
+	}
+
+	// Append user LDFLAGS from environment
+	if userLDFlags := os.Getenv("LDFLAGS"); userLDFlags != "" {
+		bf.LDFlags = append(bf.LDFlags, strings.Fields(userLDFlags)...)
 	}
 
 	return bf
@@ -358,7 +389,7 @@ func compileSources(srcs []string, output string, flags BuildFlags) error {
 	// For a single source file, compile directly (no incremental needed)
 	if len(srcs) == 1 {
 		args := buildCompileArgs(flags, srcs, output)
-		cmd := exec.Command(flags.Compiler, args...)
+		cmd := runCompiler(flags, args)
 		fmt.Println(flags.Compiler, strings.Join(compactArgs(args), " "))
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -390,7 +421,7 @@ func compileSources(srcs []string, output string, flags BuildFlags) error {
 		}
 		args = append(args, "-c", "-o", obj, src)
 
-		cmd := exec.Command(flags.Compiler, args...)
+		cmd := runCompiler(flags, args)
 		fmt.Println(flags.Compiler, strings.Join(compactArgs(args), " "))
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
@@ -414,7 +445,7 @@ func compileSources(srcs []string, output string, flags BuildFlags) error {
 	args = append(args, objFiles...)
 	args = append(args, flags.LDFlags...)
 
-	cmd := exec.Command(flags.Compiler, args...)
+	cmd := runCompiler(flags, args)
 	fmt.Printf("[%s] ", dirName)
 	fmt.Println(flags.Compiler, strings.Join(compactArgs(args), " "))
 	cmd.Stdout = os.Stdout
@@ -438,6 +469,17 @@ func buildCompileArgs(flags BuildFlags, srcs []string, output string) []string {
 	args = append(args, srcs...)
 	args = append(args, flags.LDFlags...)
 	return args
+}
+
+// runCompiler executes the compiler, routing through Docker if DockerImage is set.
+func runCompiler(flags BuildFlags, args []string) *exec.Cmd {
+	if flags.DockerImage != "" {
+		cwd, _ := os.Getwd()
+		dockerArgs := []string{"run", "-v", cwd + ":/home", "-w", "/home", "--rm", flags.DockerImage, flags.Compiler}
+		dockerArgs = append(dockerArgs, args...)
+		return exec.Command("docker", dockerArgs...)
+	}
+	return exec.Command(flags.Compiler, args...)
 }
 
 // needsRecompile checks if the object file needs to be rebuilt.
