@@ -199,7 +199,39 @@ jobs:
           ./oh -C examples/hello build
           ./oh -C examples/hello test
           ./oh -C examples/hello clean
+  # ── Windows (MSYS2 / UCRT64) ──────────────────────────────────────
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
 
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >
+            git
+            mingw-w64-ucrt-x86_64-go
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-pkg-config
+
+      - name: Build
+        run: go build -v -buildvcs=false -o oh.exe ./cmd/oh
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test -v -count=1 ./...
+
+      - name: Smoke test (hello example)
+        run: |
+          ./oh.exe -C examples/hello clean
+          ./oh.exe -C examples/hello build
+          ./oh.exe -C examples/hello clean
 
   # ── FreeBSD ────────────────────────────────────────────────────────
   freebsd:
@@ -239,3 +271,20 @@ jobs:
             ./oh -C examples/hello test
             ./oh -C examples/hello clean
 
+  # ── NetBSD ─────────────────────────────────────────────────────────
+  netbsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: vmactions/netbsd-vm@v1
+        with:
+          prepare: |
+            pkgin -y install go pkgconf
+          run: |
+            go build -v -buildvcs=false -o oh ./cmd/oh
+            go vet ./...
+            go test -v -count=1 ./...
+            ./oh -C examples/hello clean
+            ./oh -C examples/hello build
+            ./oh -C examples/hello test
+            ./oh -C examples/hello clean
