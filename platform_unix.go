@@ -1,17 +1,15 @@
-//go:build windows
+//go:build !windows
 
 package orchideous
 
 import (
-	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 )
 
-// systemIncludeDirs returns the system include directories on Windows.
+// systemIncludeDirs returns the system include directories on Unix-like systems.
 func systemIncludeDirs() []string {
-	dirs := extraWindowsIncludeDirs()
+	var dirs []string
 	if fileExists("/usr/include") {
 		dirs = append(dirs, "/usr/include")
 	}
@@ -36,13 +34,14 @@ func systemIncludeDirs() []string {
 }
 
 // compilerSupportsStd checks if the compiler supports a given -std= flag.
-// On Windows, uses a temp file instead of piping via sh -c.
 func compilerSupportsStd(compiler, std string) bool {
-	tmpFile := filepath.Join(os.TempDir(), "oh_stdcheck.cpp")
-	os.WriteFile(tmpFile, []byte("int main(){}"), 0o644)
-	defer os.Remove(tmpFile)
-	cmd := exec.Command(compiler, "-std="+std, "-fsyntax-only", tmpFile)
-	cmd.Stderr = nil
-	cmd.Stdout = nil
+	cmd := exec.Command("sh", "-c",
+		"echo 'int main(){}' | "+compiler+" -std="+std+" -x c++ -fsyntax-only - 2>/dev/null")
 	return cmd.Run() == nil
 }
+
+// msys2IncludePathToFlags is a no-op on non-Windows platforms.
+func msys2IncludePathToFlags(_ string) string { return "" }
+
+// vcpkgIncludePathToFlags is a no-op on non-Windows platforms.
+func vcpkgIncludePathToFlags(_ string) string { return "" }
