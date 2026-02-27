@@ -59,7 +59,7 @@ jobs:
             qt6-base-dev \
             librtaudio-dev
           if [ "${{ matrix.compiler }}" = "clang" ]; then
-            sudo apt-get install -y clang
+            sudo apt-get install -y clang libomp-dev
           else
             sudo apt-get install -y g++
           fi
@@ -284,7 +284,7 @@ jobs:
           prepare: |
             pkg_add go pkgconf clang
           run: |
-            export PATH="/usr/pkg/bin:$PATH"
+            export PATH="/usr/pkg/go/bin:/usr/pkg/bin:$PATH"
             export CXX=clang++
             export CC=clang
             go build -v -buildvcs=false -o oh ./cmd/oh
