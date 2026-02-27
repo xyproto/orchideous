@@ -99,6 +99,10 @@ func detectProject() Project {
 	// Resolve common/ sources from includes (iteratively)
 	p.resolveCommonDeps()
 
+	// Final deduplication
+	p.DepSources = uniqueStrings(p.DepSources)
+	p.TestSources = uniqueStrings(p.TestSources)
+
 	// Collect external includes from all sources
 	allSrcs := []string{}
 	if p.MainSource != "" {
@@ -422,10 +426,16 @@ func (p *Project) resolveCommonDeps() {
 			for _, cp := range localCommonPaths {
 				for _, ext := range SourceExts {
 					candidate := filepath.Join(cp, base+ext)
-					if fileExists(candidate) && !existingDeps[candidate] {
-						p.DepSources = append(p.DepSources, candidate)
-						existingDeps[candidate] = true
-						foundNew = true
+					if fileExists(candidate) {
+						key := candidate
+						if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
+							key = strings.ToLower(filepath.Clean(candidate))
+						}
+						if !existingDeps[key] {
+							p.DepSources = append(p.DepSources, candidate)
+							existingDeps[key] = true
+							foundNew = true
+						}
 					}
 				}
 			}
@@ -506,7 +516,11 @@ func fileExists(path string) bool {
 func toSet(strs []string) map[string]bool {
 	m := make(map[string]bool)
 	for _, s := range strs {
-		m[s] = true
+		key := s
+		if runtime.GOOS == "darwin" || runtime.GOOS == "windows" {
+			key = strings.ToLower(filepath.Clean(s))
+		}
+		m[key] = true
 	}
 	return m
 }
