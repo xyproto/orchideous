@@ -191,9 +191,6 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
 
-      - name: Install dependencies
-        run: brew install pkg-config
-
       - name: Build
         run: go build -v -buildvcs=false -o oh ./cmd/oh
 
