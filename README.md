@@ -26,6 +26,20 @@ No configuration files are needed, but the project needs to either be very simpl
 
 The auto-detection of external libraries and headers relies on them being included in the main source file.
 
+## Badge
+
+If you want this excellent hand drawn badge added to your project:
+
+[![Compiles with Orchideous](https://raw.githubusercontent.com/xyproto/orchideous/e0dc79b81eede2f6270b8ad345467cf6f0222b02/img/badge1.svg)](https://github.com/xyproto/orchideous)
+
+Then just make sure that it builds with it first, then add this to your `README.mdà:
+
+```markdown
+[![Compiles with Orchideous](https://raw.githubusercontent.com/xyproto/orchideous/e0dc79b81eede2f6270b8ad345467cf6f0222b02/img/badge1.svg)](https://github.com/xyproto/orchideous)
+```
+
+If you want, you can also add it to [the list of porjects that compiles with Orchideous](https://github.com/xyproto/orchideous/wiki/List-of-projects-that-compile-with-Orchideous), for some extra promo.
+
 ## Installation
 
 ### Arch Linux
@@ -397,20 +411,6 @@ In both cases, a GCC or Clang compiler must be available on PATH.
 * Built-in support for testing, debugging, cross-compilation, and code generation.
 * Meant for building **executables**, not libraries.
 * Generated `CMakeLists.txt` is specific to the system it was generated on.
-
-## Badge
-
-If you want this excellent hand drawn badge added to your project:
-
-[![Compiles with Orchideous](https://raw.githubusercontent.com/xyproto/orchideous/refs/heads/main/img/badge1.png)](https://github.com/xyproto/orchideous)
-
-Then just make sure that it builds with it first, then add this Markdown to your README:
-
-```markdown
-[![Compiles with Orchideous](https://raw.githubusercontent.com/xyproto/orchideous/refs/heads/main/img/badge1.png)](https://github.com/xyproto/orchideous)
-```
-
-You could also add it to [the list of porjects that compiles with Orchideous](https://github.com/xyproto/orchideous/wiki/List-of-projects-that-compile-with-Orchideous), if you like.
 
 ## General Info
 
