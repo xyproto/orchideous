@@ -1,6 +1,6 @@
 module github.com/xyproto/orchideous
 
-go 1.25
+go 1.24
 
 require github.com/xyproto/files v1.10.7
 
