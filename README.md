@@ -32,7 +32,7 @@ If you want this excellent hand drawn badge added to your project:
 
 [![Compiles with Orchideous](https://raw.githubusercontent.com/xyproto/orchideous/e0dc79b81eede2f6270b8ad345467cf6f0222b02/img/badge1.svg)](https://github.com/xyproto/orchideous)
 
-Then just make sure that it builds with it first, then add this to your `README.mdà:
+Then just make sure that it builds with it first, then add this to your `README.md`:
 
 ```markdown
 [![Compiles with Orchideous](https://raw.githubusercontent.com/xyproto/orchideous/e0dc79b81eede2f6270b8ad345467cf6f0222b02/img/badge1.svg)](https://github.com/xyproto/orchideous)
