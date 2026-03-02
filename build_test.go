@@ -321,12 +321,15 @@ func TestMergeFlags(t *testing.T) {
 }
 
 func TestDotSlash(t *testing.T) {
+	sep := string(os.PathSeparator)
 	cases := []struct {
 		input, want string
 	}{
-		{"myapp", "./myapp"},
+		{"myapp", "." + sep + "myapp"},
 		{"./myapp", "./myapp"},
-		{"/usr/bin/app", "/usr/bin/app"},
+	}
+	if runtime.GOOS != "windows" {
+		cases = append(cases, struct{ input, want string }{"/usr/bin/app", "/usr/bin/app"})
 	}
 	for _, tc := range cases {
 		got := dotSlash(tc.input)
