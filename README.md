@@ -28,7 +28,7 @@ The auto-detection of external libraries and headers relies on them being includ
 
 ## Badge
 
-If you want this excellent hand drawn badge added to your project:
+If you want, you can add this excellent hand drawn badge to your project:
 
 [![Compiles with Orchideous](https://raw.githubusercontent.com/xyproto/orchideous/e0dc79b81eede2f6270b8ad345467cf6f0222b02/img/badge1.svg)](https://raw.githubusercontent.com/xyproto/orchideous/e0dc79b81eede2f6270b8ad345467cf6f0222b02/img/badge1.svg)
 
