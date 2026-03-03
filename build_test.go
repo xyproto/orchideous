@@ -61,7 +61,13 @@ func TestAssembleFlags_OptBuild(t *testing.T) {
 	proj := detectProject()
 	flags := assembleFlags(proj, BuildOptions{Opt: true})
 
-	assertFlagPresent(t, flags.CFlags, "-Ofast")
+	if isEffectivelyClang(flags.Compiler) {
+		// clang 17+ deprecated -Ofast; the code uses -O3 -ffast-math instead
+		assertFlagPresent(t, flags.CFlags, "-O3")
+		assertFlagPresent(t, flags.CFlags, "-ffast-math")
+	} else {
+		assertFlagPresent(t, flags.CFlags, "-Ofast")
+	}
 	assertFlagPresent(t, flags.CFlags, "-flto")
 }
 
@@ -85,8 +91,11 @@ func TestAssembleFlags_TinyBuild(t *testing.T) {
 	proj := detectProject()
 	flags := assembleFlags(proj, BuildOptions{Small: true, Tiny: true})
 
-	assertFlagPresent(t, flags.CFlags, "-nostdlib")
 	assertFlagPresent(t, flags.CFlags, "-fno-rtti")
+	if !isDarwin() {
+		// -nostdlib is macOS-incompatible and only added on non-Darwin platforms
+		assertFlagPresent(t, flags.CFlags, "-nostdlib")
+	}
 }
 
 func TestAssembleFlags_StrictBuild(t *testing.T) {
