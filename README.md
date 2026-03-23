@@ -28,17 +28,17 @@ The auto-detection of external libraries and headers relies on them being includ
 
 ## Badge
 
-If you want, you can add this excellent hand drawn badge to your project:
+If you like, you can add this shield to your project to indicate that it can be built without any particular build configuration:
 
-[![Compiles with Orchideous](https://raw.githubusercontent.com/xyproto/orchideous/e0dc79b81eede2f6270b8ad345467cf6f0222b02/img/badge1.svg)](https://raw.githubusercontent.com/xyproto/orchideous/e0dc79b81eede2f6270b8ad345467cf6f0222b02/img/badge1.svg)
+![Compiles with Orchideous](https://img.shields.io/badge/Configuration_free-compilation-2fc298)
 
-Then just make sure that it builds with `oh` first, then add this to your `README.md`:
+Just make sure that it builds with `oh` first, then add this to your `README.md`:
 
 ```markdown
-[![Compiles with Orchideous](https://raw.githubusercontent.com/xyproto/orchideous/e0dc79b81eede2f6270b8ad345467cf6f0222b02/img/badge1.svg)](https://github.com/xyproto/orchideous)
+[![Compiles with Orchideous](https://img.shields.io/badge/Configuration_free-compilation-2fc298)](https://github.com/xyproto/orchideous)
 ```
 
-If you want, you can also add it to [the list of projects that compiles with Orchideous](https://github.com/xyproto/orchideous/wiki/List-of-projects-that-compile-with-Orchideous), for some extra promo.
+It is also possible to add it to [the list of projects that compiles with Orchideous](https://github.com/xyproto/orchideous/wiki/List-of-projects-that-compile-with-Orchideous).
 
 ## Installation
 
