@@ -28,7 +28,7 @@ The auto-detection of external libraries and headers relies on them being includ
 
 ## Badge
 
-If you like, you can add this shield to your project to indicate that it can be built without any particular build configuration:
+If you like, you can add this shield to your project to indicate that it can be compiled without any particular build-related configuration:
 
 ![Compiles with Orchideous](https://img.shields.io/badge/Configuration_free-compilation-2fc298)
 
