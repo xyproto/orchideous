@@ -57,7 +57,7 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 			hasDocker := files.WhichCached("docker") != ""
 			hasPodman := files.WhichCached("podman") != ""
 			// Fallback: use Docker with mingw image
-			if !hasDocker && !hasPodman {
+			if hasDocker || hasPodman {
 				const containerImage = "jhasse/mingw:latest"
 				fmt.Fprintf(os.Stderr, "warning: x86_64-w64-mingw32-g++ not found, using container image: %s\n", containerImage)
 				if proj.IsC {
