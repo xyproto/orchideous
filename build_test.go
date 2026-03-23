@@ -295,6 +295,48 @@ func TestIsCompilerClang(t *testing.T) {
 	}
 }
 
+func TestDetectMinWinVersion(t *testing.T) {
+	withTempDir(t)
+
+	cases := []struct {
+		name    string
+		source  string
+		wantVer int
+	}{
+		{"no win api", `int main() { return 0; }`, 0},
+		{"vista api", `#include <windows.h>
+int main() { DWORD m; GetConsoleMode(h, &m); m |= ENABLE_VIRTUAL_TERMINAL_PROCESSING; }`, 0x0600},
+		{"win7 api", `#include <windows.h>
+int main() { SetProcessDPIAware(); }`, 0x0601},
+		{"win10 api", `#include <windows.h>
+int main() { CreatePseudoConsole(size, in, out, 0, &hpc); }`, 0x0A00},
+		{"mixed picks highest", `#include <windows.h>
+int main() { GetTickCount64(); CreatePseudoConsole(size, in, out, 0, &hpc); }`, 0x0A00},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			writeFile(t, "test_src.c", tc.source)
+			got := detectMinWinVersion([]string{"test_src.c"})
+			if got != tc.wantVer {
+				t.Errorf("detectMinWinVersion() = 0x%04X, want 0x%04X", got, tc.wantVer)
+			}
+			os.Remove("test_src.c")
+		})
+	}
+}
+
+func TestAssembleFlags_TinyBuild_CProject_NoRtti(t *testing.T) {
+	withTempDir(t)
+	writeFile(t, "main.c", `int main() { return 0; }`)
+
+	proj := detectProject()
+	flags := assembleFlags(proj, BuildOptions{Small: true, Tiny: true})
+
+	assertFlagPresent(t, flags.CFlags, "-fno-ident")
+	assertFlagPresent(t, flags.CFlags, "-fomit-frame-pointer")
+	assertFlagAbsent(t, flags.CFlags, "-fno-rtti")
+}
+
 func TestDirDefines(t *testing.T) {
 	withTempDir(t)
 	os.MkdirAll("img", 0o755)

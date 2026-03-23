@@ -123,12 +123,18 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 			bf.LDFlags = append(bf.LDFlags, "-ffunction-sections", "-fdata-sections", "-Wl,-s", "-Wl,-gc-sections")
 		}
 		if opts.Tiny {
-			// -fno-rtti, -fno-ident and -fomit-frame-pointer are safe on all platforms
-			bf.CFlags = append(bf.CFlags, "-fno-rtti", "-fno-ident", "-fomit-frame-pointer")
+			// -fno-ident and -fomit-frame-pointer are safe on all platforms
+			bf.CFlags = append(bf.CFlags, "-fno-ident", "-fomit-frame-pointer")
+			if !proj.IsC {
+				// -fno-rtti is only valid for C++/ObjC++, not for C
+				bf.CFlags = append(bf.CFlags, "-fno-rtti")
+			}
 			if !isDarwin() {
-				// -s is unused during compilation on macOS; -nostdlib is macOS-incompatible
-				bf.CFlags = append(bf.CFlags, "-s", "-nostdlib")
+				// -s strips symbols; -nostdlib removes the C runtime (not usable for
+				// win64 cross-builds, which need the mingw runtime for stdio etc.)
+				bf.CFlags = append(bf.CFlags, "-s")
 				if !win64 {
+					bf.CFlags = append(bf.CFlags, "-nostdlib")
 					// -Wl,-z,norelro disables RELRO, an ELF security feature; not applicable to Windows PE/COFF
 					bf.LDFlags = append(bf.LDFlags, "-Wl,-z,norelro")
 				}
@@ -286,6 +292,18 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 
 	// Win64 specific flags
 	if win64 {
+		// Auto-detect the minimum Windows version and provide fallback
+		// defines for constants that may be missing from older mingw-w64.
+		allSources := []string{}
+		if proj.MainSource != "" {
+			allSources = append(allSources, proj.MainSource)
+		}
+		allSources = append(allSources, proj.DepSources...)
+		winAPI := detectWinAPI(allSources)
+		if winAPI.MinVersion > 0 {
+			bf.Defines = append(bf.Defines, fmt.Sprintf("-D_WIN32_WINNT=0x%04X", winAPI.MinVersion))
+		}
+		bf.Defines = append(bf.Defines, winAPI.FallbackDefines...)
 		bf.CFlags = append(bf.CFlags, "-Wno-unused-variable")
 		if !proj.IsC {
 			bf.CFlags = append(bf.CFlags, "-mwindows", "-fms-extensions")
@@ -496,7 +514,7 @@ func buildCompileArgs(flags BuildFlags, srcs []string, output string) []string {
 	return args
 }
 
-// runCompiler executes the compiler, routing through Docker if DockerImage is set.
+// runCompiler executes the compiler, routing through podman/docker if ContainerImage is set.
 func runCompiler(flags BuildFlags, args []string) *exec.Cmd {
 	if flags.ContainerImage != "" {
 		cwd, _ := os.Getwd()

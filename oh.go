@@ -1,6 +1,6 @@
 package orchideous
 
-// Exported functions for use by cmd/oh
+// Exported wrappers for the internal functions (kept for backward compatibility).
 
 func DoBuild(opts BuildOptions) error                          { return doBuild(opts) }
 func ExecutableName() string                                   { return executableName() }

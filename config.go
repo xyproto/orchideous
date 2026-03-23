@@ -10,11 +10,10 @@ import (
 	"github.com/xyproto/files"
 )
 
-// Config holds the full configuration for orchideous operations.
-// It embeds BuildOptions for compilation settings and adds operational fields.
+// Config holds the full configuration for an orchideous operation.
 type Config struct {
 	BuildOptions
-	SourceDir string // directory to operate in (default: current directory)
+	SourceDir string // if set, operate in this directory instead of the current one
 }
 
 // NewConfig returns a Config with default settings (standard build).
@@ -133,7 +132,8 @@ func (c *Config) Run(args ...string) error {
 		if exe == "" {
 			return fmt.Errorf("no main source file found")
 		}
-		if c.Win64 {
+		// Handle both explicit win64 and auto-detected win64 (proj.HasWin64)
+		if c.Win64 || !fileExists(exe) && fileExists(exe+".exe") {
 			exe += ".exe"
 		}
 		exePath := dotSlash(exe)
@@ -331,7 +331,8 @@ func (c *Config) TinyBuild() error {
 		if exe == "" {
 			return nil
 		}
-		if c.Win64 {
+		// Handle both explicit win64 and auto-detected win64 (proj.HasWin64)
+		if c.Win64 || !fileExists(exe) && fileExists(exe+".exe") {
 			exe += ".exe"
 		}
 		exePath := dotSlash(exe)
