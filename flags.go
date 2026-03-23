@@ -79,6 +79,11 @@ func pkgNameFromInclude(inc string) string {
 		"sdl2/sdl_mixer.h":    "SDL2_mixer",
 		"sdl2/sdl_ttf.h":      "SDL2_ttf",
 		"sdl2/sdl_net.h":      "SDL2_net",
+		"sdl3/sdl.h":          "sdl3",
+		"sdl3/sdl_image.h":    "SDL3_image",
+		"sdl3/sdl_mixer.h":    "SDL3_mixer",
+		"sdl3/sdl_ttf.h":      "SDL3_ttf",
+		"sdl3/sdl_net.h":      "SDL3_net",
 		"gtk/gtk.h":           bestGtkPkg(),
 		"vte/vte.h":           bestVtePkg(),
 		"gl/gl.h":             "gl",
@@ -114,6 +119,13 @@ func pkgNameFromInclude(inc string) string {
 	// SDL2/SDL_* -> SDL2_*
 	if strings.HasPrefix(lower, "sdl2/sdl_") {
 		word := "SDL2_" + inc[9:]
+		word = strings.TrimSuffix(word, filepath.Ext(word))
+		return word
+	}
+
+	// SDL3/SDL_* -> SDL3_*
+	if strings.HasPrefix(lower, "sdl3/sdl_") {
+		word := "SDL3_" + inc[9:]
 		word = strings.TrimSuffix(word, filepath.Ext(word))
 		return word
 	}
@@ -176,6 +188,17 @@ func resolveExtraFlags(includes []string, win64 bool) (cflags, ldflags []string)
 				if flags := pkgConfigFlags("gl"); flags != "" {
 					cflags, ldflags = mergeFlags(cflags, ldflags, flags)
 				}
+			}
+		}
+
+		// OpenGL ES (GLES2, GLES3)
+		if strings.HasPrefix(lower, "gles2/") || strings.HasPrefix(lower, "gles3/") {
+			if hasPkg {
+				if flags := pkgConfigFlags("glesv2"); flags != "" {
+					cflags, ldflags = mergeFlags(cflags, ldflags, flags)
+				}
+			} else {
+				ldflags = appendUnique(ldflags, "-lGLESv2")
 			}
 		}
 
@@ -270,6 +293,15 @@ func resolveExtraFlags(includes []string, win64 bool) (cflags, ldflags []string)
 		// SDL2_* sub-libraries
 		if strings.HasPrefix(lower, "sdl2/sdl_") && hasPkg {
 			word := "SDL2_" + inc[9:]
+			word = strings.TrimSuffix(word, filepath.Ext(word))
+			if flags := pkgConfigFlags(word); flags != "" {
+				cflags, ldflags = mergeFlags(cflags, ldflags, flags)
+			}
+		}
+
+		// SDL3_* sub-libraries
+		if strings.HasPrefix(lower, "sdl3/sdl_") && hasPkg {
+			word := "SDL3_" + inc[9:]
 			word = strings.TrimSuffix(word, filepath.Ext(word))
 			if flags := pkgConfigFlags(word); flags != "" {
 				cflags, ldflags = mergeFlags(cflags, ldflags, flags)
