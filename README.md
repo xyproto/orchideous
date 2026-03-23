@@ -245,7 +245,7 @@ See `examples/sdl2`, `examples/win64crate` (uses `IMGDIR`) and `examples/mixer` 
 
 Orchideous auto-detects libraries from `#include` directives in your source files using `pkg-config`. Supported libraries include:
 
-* **Graphics**: OpenGL, GLUT, GLFW, GLEW, GLM, Vulkan, SDL2, SFML (2 & 3), raylib
+* **Graphics**: OpenGL, GLUT, GLFW, GLEW, GLM, Vulkan, SDL (2 & 3), SFML (2 & 3), raylib
 * **GUI**: GTK (2, 3 & 4), Qt6, VTE
 * **Audio**: OpenAL, SDL2_mixer, PipeWire, rtaudio
 * **Other**: Boost, libconfig++, FastCGI, ReactPhysics3D, Gio/GLib, X11
