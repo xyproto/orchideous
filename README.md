@@ -30,12 +30,12 @@ The auto-detection of external libraries and headers relies on them being includ
 
 If you like, you can add this shield to your project to indicate that it can be compiled without any particular build-related configuration:
 
-![Compiles with Orchideous](https://img.shields.io/badge/Configuration_free-compilation-2fc298)
+![Compiles with Orchideous](https://img.shields.io/badge/Compiles_with-Orchideous-2fc298)
 
 Just make sure that it builds with `oh` first, then add this to your `README.md`:
 
 ```markdown
-[![Compiles with Orchideous](https://img.shields.io/badge/Configuration_free-compilation-2fc298)](https://github.com/xyproto/orchideous)
+[![Compiles with Orchideous](https://img.shields.io/badge/Compiles_with-Orchideous-2fc298)](https://github.com/xyproto/orchideous)
 ```
 
 It is also possible to add it to [the list of projects that compiles with Orchideous](https://github.com/xyproto/orchideous/wiki/List-of-projects-that-compile-with-Orchideous).
