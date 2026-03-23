@@ -2,6 +2,7 @@ package orchideous
 
 import (
 	"fmt"
+	"github.com/xyproto/files"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -27,13 +28,13 @@ type BuildOptions struct {
 
 // BuildFlags holds the assembled compiler and linker flags.
 type BuildFlags struct {
-	Compiler    string
-	Std         string
-	CFlags      []string
-	LDFlags     []string
-	Defines     []string
-	IncPaths    []string
-	DockerImage string // if set, compile via "docker run" with this image
+	Compiler       string
+	Std            string
+	CFlags         []string
+	LDFlags        []string
+	Defines        []string
+	IncPaths       []string
+	ContainerImage string // if set, compile via "docker run" or "podman run" with this image
 }
 
 // assembleFlags creates the full set of build flags for a project.
@@ -53,19 +54,21 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 	if compiler == "" && win64 {
 		compiler = findWin64Compiler(proj.IsC)
 		if compiler == "" {
+			hasDocker := files.WhichCached("docker") != ""
+			hasPodman := files.WhichCached("podman") != ""
 			// Fallback: use Docker with mingw image
-			if _, err := exec.LookPath("docker"); err == nil {
-				const dockerImage = "jhasse/mingw:latest"
-				fmt.Fprintf(os.Stderr, "warning: x86_64-w64-mingw32-g++ not found, using Docker image: %s\n", dockerImage)
+			if !hasDocker && !hasPodman {
+				const containerImage = "jhasse/mingw:latest"
+				fmt.Fprintf(os.Stderr, "warning: x86_64-w64-mingw32-g++ not found, using container image: %s\n", containerImage)
 				if proj.IsC {
 					compiler = "x86_64-w64-mingw32-gcc"
 				} else {
 					compiler = "x86_64-w64-mingw32-g++"
 				}
-				bf.DockerImage = dockerImage
+				bf.ContainerImage = containerImage
 			} else {
-				fmt.Fprintln(os.Stderr, "error: no mingw cross-compiler found for win64 and docker is not available")
-				fmt.Fprintln(os.Stderr, "Install x86_64-w64-mingw32-g++ or docker to cross-compile for Windows.")
+				fmt.Fprintln(os.Stderr, "error: no mingw cross-compiler found for win64, and podman/docker is not available")
+				fmt.Fprintln(os.Stderr, "Install x86_64-w64-mingw32-g++, podman or docker to cross-compile for Windows.")
 				os.Exit(1)
 			}
 		}
@@ -492,12 +495,18 @@ func buildCompileArgs(flags BuildFlags, srcs []string, output string) []string {
 
 // runCompiler executes the compiler, routing through Docker if DockerImage is set.
 func runCompiler(flags BuildFlags, args []string) *exec.Cmd {
-	if flags.DockerImage != "" {
+	if flags.ContainerImage != "" {
 		cwd, _ := os.Getwd()
-		dockerArgs := []string{"run", "-v", cwd + ":/home", "-w", "/home", "--rm", flags.DockerImage, flags.Compiler}
-		dockerArgs = append(dockerArgs, args...)
-		return exec.Command("docker", dockerArgs...)
+		podmanDockerArgs := []string{"run", "-v", cwd + ":/home", "-w", "/home", "--rm", flags.ContainerImage, flags.Compiler}
+		podmanDockerArgs = append(podmanDockerArgs, args...)
+		if files.WhichCached("podman") != "" {
+			return exec.Command("podman", podmanDockerArgs...)
+		}
+		if files.WhichCached("docker") != "" {
+			return exec.Command("docker", podmanDockerArgs...)
+		}
 	}
+	// Also fallback if podman and docker were not found
 	return exec.Command(flags.Compiler, args...)
 }
 
