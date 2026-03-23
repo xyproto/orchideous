@@ -3,11 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
 
-	"github.com/xyproto/files"
 	"github.com/xyproto/orchideous"
 )
 
@@ -67,315 +63,6 @@ func exitOnErr(err error) {
 	}
 }
 
-func hasCommand(name string) bool {
-	return files.WhichCached(name) != ""
-}
-
-func doRun(opts orchideous.BuildOptions, runArgs []string) error {
-	if err := orchideous.DoBuild(opts); err != nil {
-		return err
-	}
-	exe := orchideous.ExecutableName()
-	if exe == "" {
-		return fmt.Errorf("no main source file found")
-	}
-	if opts.Win64 {
-		exe += ".exe"
-	}
-	exePath := orchideous.DotSlash(exe)
-	// Auto-detect .exe and use wine if available
-	if strings.HasSuffix(exePath, ".exe") {
-		if winePath := files.WhichCached("wine"); winePath != "" {
-			c := exec.Command(winePath, exePath)
-			c.Args = append(c.Args, runArgs...)
-			c.Stdin = os.Stdin
-			c.Stdout = os.Stdout
-			c.Stderr = os.Stderr
-			return c.Run()
-		}
-	}
-	c := exec.Command(exePath, runArgs...)
-	c.Stdin = os.Stdin
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	return c.Run()
-}
-
-func doClean() {
-	exe := orchideous.ExecutableName()
-	patterns := []string{"*.o", "*.d", "common/*.o", "common/*.d", "include/*.o", "include/*.d", "*.profraw", "*.gcda", "*.gcno", ".sconsign.dblite", "callgrind.out.*"}
-	for _, pat := range patterns {
-		matches, _ := filepath.Glob(pat)
-		for _, f := range matches {
-			os.Remove(f)
-			fmt.Println("Removed", f)
-		}
-	}
-	if exe != "" {
-		if err := os.Remove(exe); err == nil {
-			fmt.Println("Removed", exe)
-		}
-		if err := os.Remove(exe + ".exe"); err == nil {
-			fmt.Println("Removed", exe+".exe")
-		}
-	}
-	// Clean test executables
-	testSrcs := orchideous.GetTestSources()
-	for _, ts := range testSrcs {
-		testExe := strings.TrimSuffix(ts, filepath.Ext(ts))
-		if err := os.Remove(testExe); err == nil {
-			fmt.Println("Removed", testExe)
-		}
-	}
-}
-
-func doFastClean() {
-	exe := orchideous.ExecutableName()
-	matches, _ := filepath.Glob("*.o")
-	for _, f := range matches {
-		os.Remove(f)
-		fmt.Println("Removed", f)
-	}
-	if exe != "" {
-		if err := os.Remove(exe); err == nil {
-			fmt.Println("Removed", exe)
-		}
-		if err := os.Remove(exe + ".exe"); err == nil {
-			fmt.Println("Removed", exe+".exe")
-		}
-	}
-}
-
-func doTest(opts orchideous.BuildOptions) error {
-	testSrcs := orchideous.GetTestSources()
-	if len(testSrcs) == 0 {
-		fmt.Println("Nothing to test")
-		return nil
-	}
-
-	proj := orchideous.DetectProject()
-	flags := orchideous.AssembleFlags(proj, opts)
-	for _, ts := range testSrcs {
-		testExe := strings.TrimSuffix(ts, filepath.Ext(ts))
-		if opts.Win64 || proj.HasWin64 {
-			testExe += ".exe"
-		}
-		srcs := append([]string{ts}, proj.DepSources...)
-		if err := orchideous.CompileSources(srcs, testExe, flags); err != nil {
-			return fmt.Errorf("building test %s: %w", testExe, err)
-		}
-		fmt.Printf("Running %s...\n", testExe)
-		c := exec.Command(orchideous.DotSlash(testExe))
-		c.Stdout = os.Stdout
-		c.Stderr = os.Stderr
-		if err := c.Run(); err != nil {
-			return fmt.Errorf("test %s failed: %w", testExe, err)
-		}
-	}
-	return nil
-}
-
-func doTestBuild(opts orchideous.BuildOptions) error {
-	proj := orchideous.DetectProject()
-	flags := orchideous.AssembleFlags(proj, opts)
-
-	if proj.MainSource != "" {
-		exe := orchideous.ExecutableName()
-		if opts.Win64 || proj.HasWin64 {
-			exe += ".exe"
-		}
-		srcs := append([]string{proj.MainSource}, proj.DepSources...)
-		if err := orchideous.CompileSources(srcs, exe, flags); err != nil {
-			return err
-		}
-	}
-
-	for _, ts := range proj.TestSources {
-		testExe := strings.TrimSuffix(ts, filepath.Ext(ts))
-		if opts.Win64 || proj.HasWin64 {
-			testExe += ".exe"
-		}
-		srcs := append([]string{ts}, proj.DepSources...)
-		if err := orchideous.CompileSources(srcs, testExe, flags); err != nil {
-			return fmt.Errorf("building test %s: %w", testExe, err)
-		}
-	}
-
-	if proj.MainSource == "" && len(proj.TestSources) == 0 {
-		fmt.Println("Nothing to build")
-	}
-	return nil
-}
-
-func doRec(runArgs []string) error {
-	doClean()
-	if err := orchideous.DoBuild(orchideous.BuildOptions{Opt: true, ProfileGenerate: true}); err != nil {
-		return fmt.Errorf("profile generation build: %w", err)
-	}
-	exe := orchideous.ExecutableName()
-	if exe == "" {
-		return fmt.Errorf("no executable to run for profiling")
-	}
-	exePath := orchideous.DotSlash(exe)
-	c := exec.Command(exePath, runArgs...)
-	c.Stdin = os.Stdin
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	_ = c.Run()
-	// For clang-style PGO: merge .profraw files into default.profdata
-	if profrawFiles, _ := filepath.Glob("*.profraw"); len(profrawFiles) > 0 {
-		profdata := files.WhichCached("llvm-profdata")
-		if profdata == "" {
-			// Try xcrun on macOS (Command Line Tools)
-			if out, err := exec.Command("xcrun", "-f", "llvm-profdata").Output(); err == nil {
-				profdata = strings.TrimSpace(string(out))
-			}
-		}
-		if profdata != "" {
-			args := append([]string{"merge", "-o", "default.profdata"}, profrawFiles...)
-			cmd := exec.Command(profdata, args...)
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			if err := cmd.Run(); err != nil {
-				fmt.Fprintf(os.Stderr, "warning: llvm-profdata merge failed: %v\n", err)
-			}
-		}
-	}
-	// Remove object files (but not profile data) so the next build recompiles with PGO
-	for _, pat := range []string{"*.o", "common/*.o", "include/*.o"} {
-		if matches, _ := filepath.Glob(pat); len(matches) > 0 {
-			for _, f := range matches {
-				os.Remove(f)
-			}
-		}
-	}
-	return orchideous.DoBuild(orchideous.BuildOptions{Opt: true, ProfileUse: true})
-}
-
-func doFmt() {
-	if files.WhichCached("clang-format") == "" {
-		fmt.Fprintln(os.Stderr, "error: clang-format not found in PATH")
-		os.Exit(1)
-	}
-	exts := []string{"cpp", "cc", "cxx", "h", "hpp", "hh", "h++"}
-	dirs := []string{".", "include", "common"}
-	for _, dir := range dirs {
-		for _, ext := range exts {
-			matches, _ := filepath.Glob(filepath.Join(dir, "*."+ext))
-			for _, f := range matches {
-				c := exec.Command("clang-format", "-style={BasedOnStyle: Webkit, ColumnLimit: 99}", "-i", f)
-				_ = c.Run()
-			}
-		}
-	}
-}
-
-func doValgrind(opts orchideous.BuildOptions) error {
-	if err := orchideous.DoBuild(opts); err != nil {
-		return err
-	}
-	exe := orchideous.ExecutableName()
-	if exe == "" {
-		return fmt.Errorf("no executable to profile")
-	}
-	if files.WhichCached("valgrind") == "" {
-		return fmt.Errorf("valgrind not found in PATH")
-	}
-	exePath := orchideous.DotSlash(exe)
-	c := exec.Command("valgrind", "--tool=callgrind", exePath)
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	if err := c.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "warning: valgrind exited with: %v\n", err)
-	}
-	callgrindFiles, _ := filepath.Glob("callgrind.out.*")
-	if len(callgrindFiles) > 0 && hasCommand("gprof2dot") && hasCommand("dot") {
-		c = exec.Command("sh", "-c",
-			"gprof2dot -f callgrind "+callgrindFiles[0]+" | dot -Tsvg -o output.svg")
-		c.Stdout = os.Stdout
-		c.Stderr = os.Stderr
-		_ = c.Run()
-	}
-	if len(callgrindFiles) > 0 && hasCommand("kcachegrind") {
-		c = exec.Command("kcachegrind", callgrindFiles[0])
-		c.Stdout = os.Stdout
-		c.Stderr = os.Stderr
-		_ = c.Run()
-	}
-	return nil
-}
-
-func doDebug(opts orchideous.BuildOptions, useClang bool) error {
-	if err := orchideous.DoBuild(opts); err != nil {
-		return err
-	}
-	exe := orchideous.ExecutableName()
-	if exe == "" {
-		return fmt.Errorf("no executable to debug")
-	}
-	exePath := orchideous.DotSlash(exe)
-
-	var debugger string
-	if useClang {
-		for _, d := range []string{"lldb", "gdb", "cgdb"} {
-			if hasCommand(d) {
-				debugger = d
-				break
-			}
-		}
-	} else {
-		for _, d := range []string{"cgdb", "gdb", "lldb"} {
-			if hasCommand(d) {
-				debugger = d
-				break
-			}
-		}
-	}
-	if debugger == "" {
-		return fmt.Errorf("no debugger found (tried cgdb, gdb, lldb)")
-	}
-
-	c := exec.Command(debugger, exePath)
-	c.Stdin = os.Stdin
-	c.Stdout = os.Stdout
-	c.Stderr = os.Stderr
-	c.Env = append(os.Environ(), "ASAN_OPTIONS=detect_leaks=0")
-	return c.Run()
-}
-
-func doTiny(opts orchideous.BuildOptions) error {
-	if err := orchideous.DoBuild(opts); err != nil {
-		return err
-	}
-	exe := orchideous.ExecutableName()
-	if exe == "" {
-		return nil
-	}
-	if opts.Win64 {
-		exe += ".exe"
-	}
-	exePath := orchideous.DotSlash(exe)
-
-	if hasCommand("sstrip") {
-		c := exec.Command("sstrip", exePath)
-		c.Stdout = os.Stdout
-		c.Stderr = os.Stderr
-		if err := c.Run(); err == nil {
-			fmt.Println("sstrip", exePath)
-		}
-	}
-
-	if hasCommand("upx") {
-		c := exec.Command("upx", "--brute", exePath)
-		c.Stdout = os.Stdout
-		c.Stderr = os.Stderr
-		if err := c.Run(); err == nil {
-			fmt.Println("upx --brute", exePath)
-		}
-	}
-	return nil
-}
-
 func main() {
 	args := os.Args[1:]
 	if len(args) >= 2 && args[0] == "-C" {
@@ -402,88 +89,91 @@ func main() {
 	case "version", "--version":
 		fmt.Println(versionString)
 	case "build":
-		exitOnErr(orchideous.DoBuild(orchideous.BuildOptions{}))
+		exitOnErr(orchideous.NewConfig().Build())
 	case "rebuild":
-		doClean()
-		exitOnErr(orchideous.DoBuild(orchideous.BuildOptions{}))
+		exitOnErr(orchideous.NewConfig().Rebuild())
 	case "clean":
-		doClean()
+		orchideous.NewConfig().Clean()
 	case "fastclean":
-		doFastClean()
+		orchideous.NewConfig().FastClean()
 	case "run":
-		exitOnErr(doRun(orchideous.BuildOptions{}, subArgs))
+		exitOnErr(orchideous.NewConfig().Run(subArgs...))
 	case "debug":
-		exitOnErr(doDebug(orchideous.BuildOptions{Debug: true}, false))
+		exitOnErr(orchideous.DebugConfig().LaunchDebugger())
 	case "debugbuild":
-		exitOnErr(orchideous.DoBuild(orchideous.BuildOptions{Debug: true}))
+		exitOnErr(orchideous.DebugConfig().Build())
 	case "debugnosan":
-		exitOnErr(orchideous.DoBuild(orchideous.BuildOptions{Debug: true, NoSanitizers: true}))
+		exitOnErr(orchideous.DebugNoSanConfig().Build())
 	case "opt":
-		exitOnErr(orchideous.DoBuild(orchideous.BuildOptions{Opt: true}))
+		exitOnErr(orchideous.OptConfig().Build())
 	case "strict":
-		exitOnErr(orchideous.DoBuild(orchideous.BuildOptions{Strict: true}))
+		exitOnErr(orchideous.StrictConfig().Build())
 	case "sloppy":
-		exitOnErr(orchideous.DoBuild(orchideous.BuildOptions{Sloppy: true}))
+		exitOnErr(orchideous.SloppyConfig().Build())
 	case "small":
-		exitOnErr(orchideous.DoBuild(orchideous.BuildOptions{Small: true}))
+		exitOnErr(orchideous.SmallConfig().Build())
 	case "tiny":
-		exitOnErr(doTiny(orchideous.BuildOptions{Small: true, Tiny: true}))
+		exitOnErr(orchideous.TinyConfig().TinyBuild())
 	case "clang":
-		exitOnErr(orchideous.DoBuild(orchideous.BuildOptions{Clang: true}))
+		exitOnErr(orchideous.ClangConfig().Build())
 	case "clangdebug":
-		exitOnErr(doDebug(orchideous.BuildOptions{Clang: true, Debug: true}, true))
+		cfg := orchideous.ClangConfig()
+		cfg.Debug = true
+		exitOnErr(cfg.LaunchDebugger())
 	case "clangstrict":
-		exitOnErr(orchideous.DoBuild(orchideous.BuildOptions{Clang: true, Strict: true}))
+		cfg := orchideous.ClangConfig()
+		cfg.Strict = true
+		exitOnErr(cfg.Build())
 	case "clangsloppy":
-		exitOnErr(orchideous.DoBuild(orchideous.BuildOptions{Clang: true, Sloppy: true}))
+		cfg := orchideous.ClangConfig()
+		cfg.Sloppy = true
+		exitOnErr(cfg.Build())
 	case "clangrebuild":
-		doClean()
-		exitOnErr(orchideous.DoBuild(orchideous.BuildOptions{Clang: true}))
+		exitOnErr(orchideous.ClangConfig().Rebuild())
 	case "clangtest":
-		exitOnErr(doTest(orchideous.BuildOptions{Clang: true}))
+		exitOnErr(orchideous.ClangConfig().Test())
 	case "test":
-		exitOnErr(doTest(orchideous.BuildOptions{}))
+		exitOnErr(orchideous.NewConfig().Test())
 	case "testbuild":
-		exitOnErr(doTestBuild(orchideous.BuildOptions{}))
+		exitOnErr(orchideous.NewConfig().TestBuild())
 	case "rec":
-		exitOnErr(doRec(subArgs))
+		exitOnErr(orchideous.NewConfig().Rec(subArgs...))
 	case "fmt":
-		doFmt()
+		exitOnErr(orchideous.NewConfig().Fmt())
 	case "cmake":
 		if len(subArgs) > 0 && subArgs[0] == "ninja" {
-			exitOnErr(orchideous.DoCMake(orchideous.BuildOptions{}))
-			exitOnErr(orchideous.DoNinja())
+			exitOnErr(orchideous.NewConfig().CMakeNinja())
 		} else {
-			exitOnErr(orchideous.DoCMake(orchideous.BuildOptions{}))
+			exitOnErr(orchideous.NewConfig().CMake())
 		}
 	case "pro":
-		exitOnErr(orchideous.DoPro(orchideous.BuildOptions{}))
+		exitOnErr(orchideous.NewConfig().Pro())
 	case "ninja":
-		exitOnErr(orchideous.DoNinja())
+		exitOnErr(orchideous.NewConfig().Ninja())
 	case "ninja_install":
-		exitOnErr(orchideous.DoNinjaInstall())
+		exitOnErr(orchideous.NewConfig().NinjaInstall())
 	case "ninja_clean":
-		orchideous.DoNinjaClean()
+		orchideous.NewConfig().NinjaClean()
 	case "install":
-		exitOnErr(orchideous.DoInstall())
+		exitOnErr(orchideous.NewConfig().Install())
 	case "pkg":
-		exitOnErr(orchideous.DoPkg())
+		exitOnErr(orchideous.NewConfig().Pkg())
 	case "export":
-		exitOnErr(orchideous.DoExport())
+		exitOnErr(orchideous.NewConfig().Export())
 	case "make":
-		exitOnErr(orchideous.DoMakeFile())
+		exitOnErr(orchideous.NewConfig().MakeFile())
 	case "script":
-		exitOnErr(orchideous.DoScript())
+		exitOnErr(orchideous.NewConfig().Script())
 	case "valgrind":
-		exitOnErr(doValgrind(orchideous.BuildOptions{}))
+		exitOnErr(orchideous.NewConfig().Valgrind())
 	case "win", "win64":
-		exitOnErr(orchideous.DoBuild(orchideous.BuildOptions{Win64: true}))
+		exitOnErr(orchideous.Win64Config().Build())
 	case "smallwin", "smallwin64":
-		exitOnErr(orchideous.DoBuild(orchideous.BuildOptions{Win64: true, Small: true}))
+		exitOnErr(orchideous.SmallWin64Config().Build())
 	case "tinywin", "tinywin64":
-		exitOnErr(orchideous.DoBuild(orchideous.BuildOptions{Win64: true, Small: true, Tiny: true}))
+		exitOnErr(orchideous.TinyWin64Config().TinyBuild())
 	case "zap":
-		exitOnErr(orchideous.DoBuild(orchideous.BuildOptions{Zap: true}))
+		exitOnErr(orchideous.ZapConfig().Build())
 	default:
 		fmt.Fprintf(os.Stderr, "unknown command: %s\n", cmd)
 		printHelp()
