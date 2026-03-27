@@ -134,7 +134,6 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 				// win64 cross-builds, which need the mingw runtime for stdio etc.)
 				bf.CFlags = append(bf.CFlags, "-s")
 				if !win64 {
-					bf.CFlags = append(bf.CFlags, "-nostdlib")
 					// -Wl,-z,norelro disables RELRO, an ELF security feature; not applicable to Windows PE/COFF
 					bf.LDFlags = append(bf.LDFlags, "-Wl,-z,norelro")
 				}
@@ -245,10 +244,10 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 
 	// Qt6
 	if proj.HasQt6 {
-		for _, f := range strings.Fields(qt6CxxFlags) {
+		for f := range strings.FieldsSeq(qt6CxxFlags) {
 			bf.CFlags = appendUnique(bf.CFlags, f)
 		}
-		for _, f := range strings.Fields(qt6LinkFlags) {
+		for f := range strings.FieldsSeq(qt6LinkFlags) {
 			bf.LDFlags = appendUnique(bf.LDFlags, f)
 		}
 	}
@@ -554,9 +553,9 @@ func needsRecompile(src, obj string) bool {
 	// Parse the .d file: format is "obj: src header1 header2 ..."
 	// Lines may be continued with backslash
 	content := strings.ReplaceAll(string(data), "\\\n", " ")
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		if _, after, ok := strings.Cut(line, ":"); ok {
-			for _, dep := range strings.Fields(after) {
+			for dep := range strings.FieldsSeq(after) {
 				depInfo, err := os.Stat(dep)
 				if err != nil {
 					continue

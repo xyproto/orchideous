@@ -93,8 +93,8 @@ func TestAssembleFlags_TinyBuild(t *testing.T) {
 
 	assertFlagPresent(t, flags.CFlags, "-fno-rtti")
 	if !isDarwin() {
-		// -nostdlib is macOS-incompatible and only added on non-Darwin platforms
-		assertFlagPresent(t, flags.CFlags, "-nostdlib")
+		// -s is added on non-Darwin platforms
+		assertFlagPresent(t, flags.CFlags, "-s")
 	}
 }
 
