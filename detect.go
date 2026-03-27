@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -283,10 +284,8 @@ func verifyWin64WithPreprocessor(sources []string) bool {
 			continue
 		}
 		preprocessorWorked = true
-		for _, inc := range lines {
-			if inc == "windows.h" {
-				return true
-			}
+		if slices.Contains(lines, "windows.h") {
+			return true
 		}
 	}
 	if !preprocessorWorked {
@@ -413,7 +412,7 @@ func containsMain(filename string) bool {
 	if err != nil {
 		return false
 	}
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		trimmed := strings.TrimSpace(line)
 		// Skip single-line comments
 		if strings.HasPrefix(trimmed, "//") {
@@ -478,7 +477,7 @@ func cppPreprocessIncludes(filename string) []string {
 		return nil
 	}
 	var includes []string
-	for _, line := range strings.Split(string(out), "\n") {
+	for line := range strings.SplitSeq(string(out), "\n") {
 		line = strings.TrimSpace(line)
 		if !strings.HasPrefix(line, "#include") {
 			continue
