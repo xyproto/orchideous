@@ -2,6 +2,9 @@ package orchideous
 
 import (
 	"fmt"
+	"runtime"
+	"sync"
+
 	"github.com/xyproto/files"
 	"os"
 	"os/exec"
@@ -81,6 +84,7 @@ func assembleFlags(proj Project, opts BuildOptions) BuildFlags {
 	}
 	if compiler == "" {
 		fmt.Fprintln(os.Stderr, "error: no C/C++ compiler found")
+		fmt.Fprintf(os.Stderr, "  hint: %s\n", installHint("gcc"))
 		os.Exit(1)
 	}
 
@@ -445,30 +449,20 @@ func compileSources(srcs []string, output string, flags BuildFlags) error {
 	var objFiles []string
 	needLink := false
 
+	// Collect sources that need recompiling
+	type compileJob struct {
+		src string
+		obj string
+	}
+	var jobs []compileJob
+
 	for _, src := range srcs {
 		obj := strings.TrimSuffix(src, filepath.Ext(src)) + ".o"
 		objFiles = append(objFiles, obj)
 
-		if !needsRecompile(src, obj) {
-			continue
-		}
-		needLink = true
-
-		// Compile source to object (with -MMD for dependency tracking)
-		args := []string{"-std=" + flags.Std, "-MMD"}
-		args = append(args, flags.CFlags...)
-		args = append(args, flags.Defines...)
-		for _, ip := range flags.IncPaths {
-			args = append(args, "-I"+ip)
-		}
-		args = append(args, "-c", "-o", obj, src)
-
-		cmd := runCompiler(flags, args)
-		fmt.Println(flags.Compiler, strings.Join(compactArgs(args), " "))
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("compiling %s: %w", src, err)
+		if needsRecompile(src, obj) {
+			needLink = true
+			jobs = append(jobs, compileJob{src, obj})
 		}
 	}
 
@@ -480,6 +474,63 @@ func compileSources(srcs []string, output string, flags BuildFlags) error {
 	if !needLink {
 		fmt.Println("up to date")
 		return nil
+	}
+
+	// Compile sources in parallel
+	if len(jobs) > 0 {
+		maxWorkers := runtime.NumCPU()
+		if maxWorkers > len(jobs) {
+			maxWorkers = len(jobs)
+		}
+		sem := make(chan struct{}, maxWorkers)
+		var mu sync.Mutex
+		var firstErr error
+
+		var wg sync.WaitGroup
+		for _, job := range jobs {
+			wg.Add(1)
+			go func(src, obj string) {
+				defer wg.Done()
+
+				sem <- struct{}{}
+				defer func() { <-sem }()
+
+				mu.Lock()
+				if firstErr != nil {
+					mu.Unlock()
+					return
+				}
+				mu.Unlock()
+
+				args := []string{"-std=" + flags.Std, "-MMD"}
+				args = append(args, flags.CFlags...)
+				args = append(args, flags.Defines...)
+				for _, ip := range flags.IncPaths {
+					args = append(args, "-I"+ip)
+				}
+				args = append(args, "-c", "-o", obj, src)
+
+				cmd := runCompiler(flags, args)
+				mu.Lock()
+				fmt.Println(flags.Compiler, strings.Join(compactArgs(args), " "))
+				mu.Unlock()
+				out, err := cmd.CombinedOutput()
+
+				mu.Lock()
+				defer mu.Unlock()
+				if len(out) > 0 {
+					os.Stderr.Write(out)
+				}
+				if err != nil && firstErr == nil {
+					firstErr = fmt.Errorf("compiling %s: %w", src, err)
+				}
+			}(job.src, job.obj)
+		}
+		wg.Wait()
+
+		if firstErr != nil {
+			return firstErr
+		}
 	}
 
 	// Link

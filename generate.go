@@ -5,7 +5,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -190,7 +192,7 @@ func doNinja() error {
 	// Try running ninja directly if a previous cmake+ninja build exists
 	if fileExists(filepath.Join("build", "build.ninja")) {
 		if _, err := exec.LookPath("ninja"); err != nil {
-			return fmt.Errorf("ninja not found in PATH")
+			return fmt.Errorf("ninja not found in PATH\n  hint: %s", installHint("ninja"))
 		}
 		ninja := exec.Command("ninja", "-C", "build")
 		ninja.Stdout = os.Stdout
@@ -201,39 +203,58 @@ func doNinja() error {
 	if fileExists("CMakeLists.txt") {
 		return doCMakeNinja()
 	}
-	return fmt.Errorf("no build/build.ninja or CMakeLists.txt found")
+	return fmt.Errorf("no build/build.ninja or CMakeLists.txt found\n  hint: run 'oh generate' to create a CMakeLists.txt")
+}
+
+// needsCMakeRegen checks whether cmake needs to be re-run in the build directory.
+// Returns true if build/ doesn't exist or CMakeLists.txt is newer than the cmake cache.
+func needsCMakeRegen() bool {
+	cacheFile := filepath.Join("build", "CMakeCache.txt")
+	cacheInfo, err := os.Stat(cacheFile)
+	if err != nil {
+		return true // no cache, needs generation
+	}
+	cmakeInfo, err := os.Stat("CMakeLists.txt")
+	if err != nil {
+		return true
+	}
+	return cmakeInfo.ModTime().After(cacheInfo.ModTime())
 }
 
 // doCMakeNinja builds the project using CMake + Ninja.
+// Only re-runs cmake if CMakeLists.txt has changed; ninja handles incremental builds.
 func doCMakeNinja() error {
 	if !fileExists("CMakeLists.txt") {
-		return fmt.Errorf("could not find CMakeLists.txt (run 'oh generate' first)")
+		return fmt.Errorf("could not find CMakeLists.txt\n  hint: run 'oh generate' to create one")
+	}
+
+	if _, err := exec.LookPath("cmake"); err != nil {
+		return fmt.Errorf("cmake not found in PATH\n  hint: %s", installHint("cmake"))
 	}
 
 	if _, err := exec.LookPath("ninja"); err != nil {
-		return fmt.Errorf("ninja not found in PATH")
+		return fmt.Errorf("ninja not found in PATH\n  hint: %s", installHint("ninja"))
 	}
 
-	// Remove and recreate build directory
-	os.RemoveAll("build")
-	if err := os.MkdirAll("build", 0o755); err != nil {
-		return err
+	if needsCMakeRegen() {
+		if err := os.MkdirAll("build", 0o755); err != nil {
+			return err
+		}
+
+		cmakeArgs := []string{"-G", "Ninja", ".."}
+		if files.WhichCached("ccache") != "" {
+			cmakeArgs = []string{"-D", "CMAKE_CXX_COMPILER_LAUNCHER=ccache", "-G", "Ninja", ".."}
+		}
+		cmake := exec.Command("cmake", cmakeArgs...)
+		cmake.Dir = "build"
+		cmake.Stdout = os.Stdout
+		cmake.Stderr = os.Stderr
+		if err := cmake.Run(); err != nil {
+			return fmt.Errorf("cmake failed: %w", err)
+		}
 	}
 
-	// Run cmake in build/
-	cmakeArgs := []string{"-G", "Ninja", ".."}
-	if files.WhichCached("ccache") != "" {
-		cmakeArgs = []string{"-D", "CMAKE_CXX_COMPILER_LAUNCHER=ccache", "-G", "Ninja", ".."}
-	}
-	cmake := exec.Command("cmake", cmakeArgs...)
-	cmake.Dir = "build"
-	cmake.Stdout = os.Stdout
-	cmake.Stderr = os.Stderr
-	if err := cmake.Run(); err != nil {
-		return fmt.Errorf("cmake failed: %w", err)
-	}
-
-	// Run ninja in build/
+	// ninja handles parallelism and incremental builds automatically
 	ninja := exec.Command("ninja", "-C", "build")
 	ninja.Stdout = os.Stdout
 	ninja.Stderr = os.Stderr
@@ -250,9 +271,10 @@ func doMake() error {
 	// Try running make directly if a Makefile exists
 	if fileExists("Makefile") {
 		if _, err := exec.LookPath("make"); err != nil {
-			return fmt.Errorf("make not found in PATH")
+			return fmt.Errorf("make not found in PATH\n  hint: %s", installHint("make"))
 		}
-		cmd := exec.Command("make")
+		jobs := strconv.Itoa(runtime.NumCPU())
+		cmd := exec.Command("make", "-j"+jobs)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		return cmd.Run()
@@ -261,7 +283,7 @@ func doMake() error {
 	if fileExists("CMakeLists.txt") {
 		return doCMakeMake()
 	}
-	return fmt.Errorf("no Makefile or CMakeLists.txt found")
+	return fmt.Errorf("no Makefile or CMakeLists.txt found\n  hint: run 'oh generate' to create a CMakeLists.txt, or 'oh export' to create a Makefile")
 }
 
 // doCMakeBuild builds using cmake, preferring ninja over make.
@@ -569,36 +591,41 @@ func filterNonLinkFlags(flags []string) []string {
 }
 
 // doCMakeMake builds the project using CMake + Make.
+// Only re-runs cmake if CMakeLists.txt has changed; make handles incremental builds.
 func doCMakeMake() error {
 	if !fileExists("CMakeLists.txt") {
-		return fmt.Errorf("could not find CMakeLists.txt (run 'oh generate' first)")
+		return fmt.Errorf("could not find CMakeLists.txt\n  hint: run 'oh generate' to create one")
+	}
+
+	if _, err := exec.LookPath("cmake"); err != nil {
+		return fmt.Errorf("cmake not found in PATH\n  hint: %s", installHint("cmake"))
 	}
 
 	if _, err := exec.LookPath("make"); err != nil {
-		return fmt.Errorf("make not found in PATH")
+		return fmt.Errorf("make not found in PATH\n  hint: %s", installHint("make"))
 	}
 
-	// Remove and recreate build directory
-	os.RemoveAll("build")
-	if err := os.MkdirAll("build", 0o755); err != nil {
-		return err
+	if needsCMakeRegen() {
+		if err := os.MkdirAll("build", 0o755); err != nil {
+			return err
+		}
+
+		cmakeArgs := []string{".."}
+		if files.WhichCached("ccache") != "" {
+			cmakeArgs = []string{"-D", "CMAKE_CXX_COMPILER_LAUNCHER=ccache", ".."}
+		}
+		cmake := exec.Command("cmake", cmakeArgs...)
+		cmake.Dir = "build"
+		cmake.Stdout = os.Stdout
+		cmake.Stderr = os.Stderr
+		if err := cmake.Run(); err != nil {
+			return fmt.Errorf("cmake failed: %w", err)
+		}
 	}
 
-	// Run cmake in build/
-	cmakeArgs := []string{".."}
-	if files.WhichCached("ccache") != "" {
-		cmakeArgs = []string{"-D", "CMAKE_CXX_COMPILER_LAUNCHER=ccache", ".."}
-	}
-	cmake := exec.Command("cmake", cmakeArgs...)
-	cmake.Dir = "build"
-	cmake.Stdout = os.Stdout
-	cmake.Stderr = os.Stderr
-	if err := cmake.Run(); err != nil {
-		return fmt.Errorf("cmake failed: %w", err)
-	}
-
-	// Run make in build/
-	makeCmd := exec.Command("make", "-C", "build")
+	// Run make in build/ with parallel jobs
+	jobs := strconv.Itoa(runtime.NumCPU())
+	makeCmd := exec.Command("make", "-C", "build", "-j"+jobs)
 	makeCmd.Stdout = os.Stdout
 	makeCmd.Stderr = os.Stderr
 	if err := makeCmd.Run(); err != nil {

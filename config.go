@@ -310,7 +310,7 @@ func (c *Config) LaunchDebugger() error {
 			}
 		}
 		if debugger == "" {
-			return fmt.Errorf("no debugger found (tried cgdb, gdb, lldb)")
+			return fmt.Errorf("no debugger found\n  hint: %s", installHint("gdb"))
 		}
 
 		cmd := exec.Command(debugger, exePath)
@@ -412,18 +412,28 @@ func (c *Config) Rec(args ...string) error {
 func (c *Config) Fmt() error {
 	return c.withDir(func() error {
 		if !hasCommand("clang-format") {
-			return fmt.Errorf("clang-format not found in PATH")
+			return fmt.Errorf("clang-format not found in PATH\n  hint: %s", installHint("clang-format"))
 		}
 		exts := []string{"cpp", "cc", "cxx", "h", "hpp", "hh", "h++"}
 		dirs := []string{".", "include", "common"}
+		formatted := 0
 		for _, dir := range dirs {
 			for _, ext := range exts {
 				matches, _ := filepath.Glob(filepath.Join(dir, "*."+ext))
 				for _, f := range matches {
 					cmd := exec.Command("clang-format", "-style={BasedOnStyle: Webkit, ColumnLimit: 99}", "-i", f)
-					_ = cmd.Run()
+					if err := cmd.Run(); err != nil {
+						fmt.Fprintf(os.Stderr, "warning: clang-format failed on %s: %v\n", f, err)
+					} else {
+						formatted++
+					}
 				}
 			}
+		}
+		if formatted > 0 {
+			fmt.Printf("Formatted %d file(s)\n", formatted)
+		} else {
+			fmt.Println("No source files found to format")
 		}
 		return nil
 	})
@@ -440,7 +450,7 @@ func (c *Config) Valgrind() error {
 			return fmt.Errorf("no executable to profile")
 		}
 		if !hasCommand("valgrind") {
-			return fmt.Errorf("valgrind not found in PATH")
+			return fmt.Errorf("valgrind not found in PATH\n  hint: %s", installHint("valgrind"))
 		}
 		exePath := dotSlash(exe)
 		cmd := exec.Command("valgrind", "--tool=callgrind", exePath)
