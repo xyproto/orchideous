@@ -28,23 +28,25 @@ oh clangstrict  - use clang++ and strict flags
 oh clangsloppy  - use clang++ and sloppy flags
 oh clangrebuild - clean and build with clang++
 oh clangtest    - build and run tests with clang++
-oh clean        - remove built files
+oh clean        - clean all build artifacts and build directories
 oh fastclean    - only remove executable and *.o
 oh rebuild      - clean and build
 oh test         - build and run tests
 oh testbuild    - build tests (without running)
 oh rec          - profile-guided optimization (build, run, rebuild)
 oh fmt          - format source code with clang-format
-oh cmake        - generate CMakeLists.txt
-oh cmake ninja  - generate CMakeLists.txt and build with ninja
-oh ninja        - build using existing CMakeLists.txt and ninja
+oh generate     - generate CMakeLists.txt
+oh cmake        - build with cmake (prefers ninja, falls back to make)
+oh make         - build with make (falls back to cmake+make)
+oh ninja        - build with ninja (falls back to cmake+ninja)
 oh ninja_install- install from ninja build
 oh ninja_clean  - clean ninja build
+oh make_install - install from cmake+make build
+oh make_clean   - clean cmake+make build
 oh pro          - generate QtCreator project file
 oh install      - install the project (PREFIX, DESTDIR)
 oh pkg          - package the project into pkg/
 oh export       - export a standalone Makefile and build.sh
-oh make         - generate a standalone Makefile
 oh script       - generate build.sh and clean.sh
 oh valgrind     - build and profile with valgrind
 oh win64        - cross-compile for 64-bit Windows
@@ -141,11 +143,9 @@ func main() {
 	case "fmt":
 		exitOnErr(orchideous.NewConfig().Fmt())
 	case "cmake":
-		if len(subArgs) > 0 && subArgs[0] == "ninja" {
-			exitOnErr(orchideous.NewConfig().CMakeNinja())
-		} else {
-			exitOnErr(orchideous.NewConfig().CMake())
-		}
+		exitOnErr(orchideous.NewConfig().CMakeBuild())
+	case "generate":
+		exitOnErr(orchideous.NewConfig().Generate())
 	case "pro":
 		exitOnErr(orchideous.NewConfig().Pro())
 	case "ninja":
@@ -154,6 +154,10 @@ func main() {
 		exitOnErr(orchideous.NewConfig().NinjaInstall())
 	case "ninja_clean":
 		orchideous.NewConfig().NinjaClean()
+	case "make_install":
+		exitOnErr(orchideous.NewConfig().CMakeMakeInstall())
+	case "make_clean":
+		orchideous.NewConfig().CMakeMakeClean()
 	case "install":
 		exitOnErr(orchideous.NewConfig().Install())
 	case "pkg":
@@ -161,7 +165,7 @@ func main() {
 	case "export":
 		exitOnErr(orchideous.NewConfig().Export())
 	case "make":
-		exitOnErr(orchideous.NewConfig().MakeFile())
+		exitOnErr(orchideous.NewConfig().Make())
 	case "script":
 		exitOnErr(orchideous.NewConfig().Script())
 	case "valgrind":

@@ -12,8 +12,8 @@ import (
 	"github.com/xyproto/files"
 )
 
-// doCMake generates a CMakeLists.txt file.
-func doCMake(opts BuildOptions) error {
+// doGenerate generates a CMakeLists.txt file.
+func doGenerate(opts BuildOptions) error {
 	proj := detectProject()
 	if proj.MainSource == "" {
 		return fmt.Errorf("no main source file found")
@@ -184,10 +184,30 @@ func doPro(opts BuildOptions) error {
 	return nil
 }
 
-// doNinja builds the project using CMake + Ninja.
+// doNinja builds using ninja. If build/build.ninja exists, runs ninja directly.
+// Otherwise falls back to cmake+ninja if CMakeLists.txt exists.
 func doNinja() error {
+	// Try running ninja directly if a previous cmake+ninja build exists
+	if fileExists(filepath.Join("build", "build.ninja")) {
+		if _, err := exec.LookPath("ninja"); err != nil {
+			return fmt.Errorf("ninja not found in PATH")
+		}
+		ninja := exec.Command("ninja", "-C", "build")
+		ninja.Stdout = os.Stdout
+		ninja.Stderr = os.Stderr
+		return ninja.Run()
+	}
+	// Fall back to cmake+ninja if CMakeLists.txt exists
+	if fileExists("CMakeLists.txt") {
+		return doCMakeNinja()
+	}
+	return fmt.Errorf("no build/build.ninja or CMakeLists.txt found")
+}
+
+// doCMakeNinja builds the project using CMake + Ninja.
+func doCMakeNinja() error {
 	if !fileExists("CMakeLists.txt") {
-		return fmt.Errorf("could not find CMakeLists.txt (run 'oh cmake' first)")
+		return fmt.Errorf("could not find CMakeLists.txt (run 'oh generate' first)")
 	}
 
 	if _, err := exec.LookPath("ninja"); err != nil {
@@ -222,6 +242,41 @@ func doNinja() error {
 	}
 
 	return nil
+}
+
+// doMake builds using make. If a Makefile exists, runs make directly.
+// Otherwise falls back to cmake+make if CMakeLists.txt exists.
+func doMake() error {
+	// Try running make directly if a Makefile exists
+	if fileExists("Makefile") {
+		if _, err := exec.LookPath("make"); err != nil {
+			return fmt.Errorf("make not found in PATH")
+		}
+		cmd := exec.Command("make")
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
+	}
+	// Fall back to cmake+make if CMakeLists.txt exists
+	if fileExists("CMakeLists.txt") {
+		return doCMakeMake()
+	}
+	return fmt.Errorf("no Makefile or CMakeLists.txt found")
+}
+
+// doCMakeBuild builds using cmake, preferring ninja over make.
+// Generates CMakeLists.txt first if it does not exist.
+func doCMakeBuild(opts BuildOptions) error {
+	if !fileExists("CMakeLists.txt") {
+		if err := doGenerate(opts); err != nil {
+			return err
+		}
+	}
+	// Prefer ninja if available, otherwise fall back to make
+	if _, err := exec.LookPath("ninja"); err == nil {
+		return doCMakeNinja()
+	}
+	return doCMakeMake()
 }
 
 // doInstall installs the built executable and data directories.
@@ -339,7 +394,7 @@ func doPkg() error {
 // doExport generates a standalone Makefile and build.sh for users without oh.
 func doExport() error {
 	// Generate Makefile
-	if err := doMakeFile(); err != nil {
+	if err := doGenerateMakefile(); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: could not generate Makefile: %v\n", err)
 	}
 
@@ -351,8 +406,8 @@ func doExport() error {
 	return nil
 }
 
-// doMakeFile generates a standalone Makefile.
-func doMakeFile() error {
+// doGenerateMakefile generates a standalone Makefile.
+func doGenerateMakefile() error {
 	if fileExists("Makefile") {
 		return fmt.Errorf("makefile already exists, will not overwrite")
 	}
@@ -513,10 +568,72 @@ func filterNonLinkFlags(flags []string) []string {
 	return result
 }
 
+// doCMakeMake builds the project using CMake + Make.
+func doCMakeMake() error {
+	if !fileExists("CMakeLists.txt") {
+		return fmt.Errorf("could not find CMakeLists.txt (run 'oh generate' first)")
+	}
+
+	if _, err := exec.LookPath("make"); err != nil {
+		return fmt.Errorf("make not found in PATH")
+	}
+
+	// Remove and recreate build directory
+	os.RemoveAll("build")
+	if err := os.MkdirAll("build", 0o755); err != nil {
+		return err
+	}
+
+	// Run cmake in build/
+	cmakeArgs := []string{".."}
+	if files.WhichCached("ccache") != "" {
+		cmakeArgs = []string{"-D", "CMAKE_CXX_COMPILER_LAUNCHER=ccache", ".."}
+	}
+	cmake := exec.Command("cmake", cmakeArgs...)
+	cmake.Dir = "build"
+	cmake.Stdout = os.Stdout
+	cmake.Stderr = os.Stderr
+	if err := cmake.Run(); err != nil {
+		return fmt.Errorf("cmake failed: %w", err)
+	}
+
+	// Run make in build/
+	makeCmd := exec.Command("make", "-C", "build")
+	makeCmd.Stdout = os.Stdout
+	makeCmd.Stderr = os.Stderr
+	if err := makeCmd.Run(); err != nil {
+		return fmt.Errorf("make failed: %w", err)
+	}
+
+	return nil
+}
+
+// doCMakeMakeInstall installs from a cmake+make build.
+func doCMakeMakeInstall() error {
+	if !fileExists("build") {
+		return fmt.Errorf("no build/ directory found (run 'oh cmake' or 'oh make' first)")
+	}
+	if _, err := exec.LookPath("make"); err != nil {
+		return fmt.Errorf("make not found in PATH")
+	}
+	makeCmd := exec.Command("make", "install", "-C", "build")
+	makeCmd.Stdout = os.Stdout
+	makeCmd.Stderr = os.Stderr
+	return makeCmd.Run()
+}
+
+// doCMakeMakeClean cleans a cmake+make build.
+func doCMakeMakeClean() {
+	if fileExists("build") {
+		os.RemoveAll("build")
+		fmt.Println("Removed build/")
+	}
+}
+
 // doNinjaInstall installs from a ninja build.
 func doNinjaInstall() error {
 	if !fileExists("build") {
-		return fmt.Errorf("no build/ directory found (run 'oh cmake ninja' first)")
+		return fmt.Errorf("no build/ directory found (run 'oh ninja' first)")
 	}
 	if _, err := exec.LookPath("ninja"); err != nil {
 		return fmt.Errorf("ninja not found in PATH")
@@ -534,6 +651,36 @@ func doNinjaClean() {
 		os.RemoveAll("build")
 		fmt.Println("Removed build/")
 	}
+}
+
+// doCleanAll performs comprehensive cleaning: make clean, ninja clean,
+// removes the build/ directory, and cleans regular build artifacts.
+func doCleanAll() {
+	// Try make clean if Makefile exists
+	if fileExists("Makefile") {
+		if _, err := exec.LookPath("make"); err == nil {
+			cmd := exec.Command("make", "clean")
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			_ = cmd.Run()
+		}
+	}
+	// Try ninja clean if build/build.ninja exists
+	if fileExists(filepath.Join("build", "build.ninja")) {
+		if _, err := exec.LookPath("ninja"); err == nil {
+			cmd := exec.Command("ninja", "-C", "build", "-t", "clean")
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			_ = cmd.Run()
+		}
+	}
+	// Remove build directory
+	if fileExists("build") {
+		os.RemoveAll("build")
+		fmt.Println("Removed build/")
+	}
+	// Clean regular build artifacts
+	cleanFiles()
 }
 
 // copyFile copies a file with the given permissions.

@@ -200,9 +200,10 @@ func fastCleanFiles() {
 	}
 }
 
-// Clean removes build artifacts (object files, executables, profiling data).
+// Clean removes all build artifacts: runs make clean, ninja clean,
+// removes the build/ directory, and cleans object files and executables.
 func (c *Config) Clean() {
-	c.withDirNoErr(cleanFiles)
+	c.withDirNoErr(doCleanAll)
 }
 
 // FastClean removes only the executable and object files.
@@ -466,27 +467,34 @@ func (c *Config) Valgrind() error {
 	})
 }
 
-// CMake generates a CMakeLists.txt file.
-func (c *Config) CMake() error {
+// Generate generates a CMakeLists.txt file.
+func (c *Config) Generate() error {
 	return c.withDir(func() error {
-		return doCMake(c.BuildOptions)
+		return doGenerate(c.BuildOptions)
 	})
 }
 
-// CMakeNinja generates CMakeLists.txt and builds with ninja.
-func (c *Config) CMakeNinja() error {
+// CMakeBuild builds using cmake, preferring ninja over make.
+// Generates CMakeLists.txt first if it does not exist.
+func (c *Config) CMakeBuild() error {
 	return c.withDir(func() error {
-		if err := doCMake(c.BuildOptions); err != nil {
-			return err
-		}
-		return doNinja()
+		return doCMakeBuild(c.BuildOptions)
 	})
 }
 
-// Ninja builds the project using an existing CMakeLists.txt and ninja.
+// Ninja builds using ninja. If build/build.ninja exists, runs ninja directly.
+// Otherwise falls back to cmake+ninja if CMakeLists.txt exists.
 func (c *Config) Ninja() error {
 	return c.withDir(func() error {
 		return doNinja()
+	})
+}
+
+// Make builds using make. If a Makefile exists, runs make directly.
+// Otherwise falls back to cmake+make if CMakeLists.txt exists.
+func (c *Config) Make() error {
+	return c.withDir(func() error {
+		return doMake()
 	})
 }
 
@@ -500,6 +508,18 @@ func (c *Config) NinjaInstall() error {
 // NinjaClean removes the ninja build directory.
 func (c *Config) NinjaClean() {
 	c.withDirNoErr(doNinjaClean)
+}
+
+// CMakeMakeInstall installs from a cmake+make build.
+func (c *Config) CMakeMakeInstall() error {
+	return c.withDir(func() error {
+		return doCMakeMakeInstall()
+	})
+}
+
+// CMakeMakeClean removes the cmake+make build directory.
+func (c *Config) CMakeMakeClean() {
+	c.withDirNoErr(doCMakeMakeClean)
 }
 
 // Pro generates a QtCreator .pro project file.
@@ -530,10 +550,10 @@ func (c *Config) Export() error {
 	})
 }
 
-// MakeFile generates a standalone Makefile.
-func (c *Config) MakeFile() error {
+// GenerateMakefile generates a standalone Makefile.
+func (c *Config) GenerateMakefile() error {
 	return c.withDir(func() error {
-		return doMakeFile()
+		return doGenerateMakefile()
 	})
 }
 

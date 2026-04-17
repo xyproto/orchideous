@@ -65,7 +65,7 @@ func TestDoCMake(t *testing.T) {
 	writeFile(t, "main.cpp", `#include <iostream>
 int main() { std::cout << "hello"; return 0; }`)
 
-	err := doCMake(BuildOptions{})
+	err := doGenerate(BuildOptions{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -90,7 +90,7 @@ func TestDoCMake_NoOverwrite(t *testing.T) {
 	writeFile(t, "main.cpp", `int main() { return 0; }`)
 	writeFile(t, "CMakeLists.txt", "existing")
 
-	err := doCMake(BuildOptions{})
+	err := doGenerate(BuildOptions{})
 	if err == nil {
 		t.Error("expected error when CMakeLists.txt already exists")
 	}
@@ -101,7 +101,7 @@ func TestDoMakeFile(t *testing.T) {
 	writeFile(t, "main.cpp", `#include <iostream>
 int main() { return 0; }`)
 
-	err := doMakeFile()
+	err := doGenerateMakefile()
 	if err != nil {
 		t.Fatal(err)
 	}
