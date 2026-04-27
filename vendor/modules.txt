@@ -1,7 +1,7 @@
 # github.com/xyproto/binary v1.4.0
 ## explicit; go 1.18
 github.com/xyproto/binary
-# github.com/xyproto/distrodetector v1.3.1
+# github.com/xyproto/distrodetector v1.3.2
 ## explicit; go 1.11
 github.com/xyproto/distrodetector
 # github.com/xyproto/env/v2 v2.5.6

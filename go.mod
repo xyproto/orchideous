@@ -3,7 +3,7 @@ module github.com/xyproto/orchideous
 go 1.24
 
 require (
-	github.com/xyproto/distrodetector v1.3.1
+	github.com/xyproto/distrodetector v1.3.2
 	github.com/xyproto/files v1.10.8
 )
 
