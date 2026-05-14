@@ -80,3 +80,7 @@ orchideous
 *.gcno
 
 examples/hello/hello
+examples/async/async
+examples/designated/designated
+examples/findfiles/findfiles
+examples/visit/visit
