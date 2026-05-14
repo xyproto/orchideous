@@ -133,7 +133,7 @@ jobs:
             base-devel go pkgconf \
             boost fcgi freeglut glew glfw-x11 glibmm glm glu \
             gtk4 libconfig libpipewire libx11 openal qt6-base \
-            raylib reactphysics3d rtaudio sdl2 sdl2_mixer \
+            raylib rtaudio sdl2 sdl2_mixer sdl3 sdl3_mixer \
             sfml vte4 vulkan-headers vulkan-icd-loader
 
       - name: Fix git ownership
