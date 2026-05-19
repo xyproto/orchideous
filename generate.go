@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/xyproto/env/v2"
 	"github.com/xyproto/files"
 )
 
@@ -309,11 +310,8 @@ func doCMakeBuild(opts BuildOptions) error {
 
 // doInstall installs the built executable and data directories.
 func doInstall() error {
-	prefix := os.Getenv("PREFIX")
-	if prefix == "" {
-		prefix = "/usr/local"
-	}
-	destdir := os.Getenv("DESTDIR")
+	prefix := env.Str("PREFIX", "/usr/local")
+	destdir := env.Str("DESTDIR")
 	exe := executableName()
 
 	// Build with install-time directory defines
@@ -411,10 +409,7 @@ func doInstall() error {
 
 // doPkg packages the project to a pkg/ directory.
 func doPkg() error {
-	pkgDir := os.Getenv("pkgdir")
-	if pkgDir == "" {
-		pkgDir = filepath.Join(".", "pkg")
-	}
+	pkgDir := env.Str("pkgdir", filepath.Join(".", "pkg"))
 	os.Setenv("DESTDIR", pkgDir)
 	return doInstall()
 }
