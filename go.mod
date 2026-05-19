@@ -4,11 +4,8 @@ go 1.25.1
 
 require (
 	github.com/xyproto/distrodetector v1.3.2
-	github.com/xyproto/env v1.9.1
+	github.com/xyproto/env/v2 v2.5.6
 	github.com/xyproto/files v1.10.8
 )
 
-require (
-	github.com/xyproto/binary v1.4.0 // indirect
-	github.com/xyproto/env/v2 v2.5.6 // indirect
-)
+require github.com/xyproto/binary v1.4.0 // indirect
