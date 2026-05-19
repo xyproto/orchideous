@@ -1,6 +1,6 @@
 module github.com/xyproto/orchideous
 
-go 1.24
+go 1.25.1
 
 require (
 	github.com/xyproto/distrodetector v1.3.2
