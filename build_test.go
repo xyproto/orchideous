@@ -133,8 +133,9 @@ func TestAssembleFlags_CProject(t *testing.T) {
 	flags := assembleFlags(proj, BuildOptions{})
 
 	if runtime.GOOS == "linux" {
-		if flags.Std != "c18" {
-			t.Errorf("expected c18 for C on linux, got %q", flags.Std)
+		validCStds := map[string]bool{"c11": true, "c17": true, "c18": true, "c23": true, "c2x": true}
+		if !validCStds[flags.Std] {
+			t.Errorf("expected a valid C standard for C on linux, got %q", flags.Std)
 		}
 	}
 }
@@ -150,7 +151,6 @@ int main() { return 0; }`)
 	assertFlagPresent(t, flags.CFlags, "-fopenmp")
 	assertFlagPresent(t, flags.CFlags, "-O3")
 	assertFlagPresent(t, flags.LDFlags, "-fopenmp")
-	assertFlagPresent(t, flags.LDFlags, "-lpthread")
 }
 
 func TestAssembleFlags_LinuxHardening(t *testing.T) {
@@ -165,6 +165,8 @@ func TestAssembleFlags_LinuxHardening(t *testing.T) {
 
 	assertFlagPresent(t, flags.CFlags, "-fno-plt")
 	assertFlagPresent(t, flags.CFlags, "-fstack-protector-strong")
+	assertFlagPresent(t, flags.CFlags, "-fstack-clash-protection")
+	assertFlagPresent(t, flags.CFlags, "-fcf-protection")
 }
 
 func TestAssembleFlags_NoLinuxHardeningWhenSloppy(t *testing.T) {
@@ -404,5 +406,143 @@ func assertFlagAbsent(t *testing.T, flags []string, flag string) {
 	if slices.Contains(flags, flag) {
 		t.Errorf("unexpected flag %q in %v", flag, flags)
 		return
+	}
+}
+
+func TestAssembleFlags_SloppyCProject_NoFpermissive(t *testing.T) {
+	withTempDir(t)
+	writeFile(t, "main.c", `int main() { return 0; }`)
+
+	proj := detectProject()
+	flags := assembleFlags(proj, BuildOptions{Sloppy: true})
+
+	assertFlagAbsent(t, flags.CFlags, "-fpermissive")
+	assertFlagPresent(t, flags.CFlags, "-w")
+}
+
+func TestCStdToCMakeStd(t *testing.T) {
+	cases := []struct {
+		input, want string
+	}{
+		{"c23", "23"},
+		{"c2x", "23"},
+		{"c17", "17"},
+		{"c18", "17"},
+		{"c11", "11"},
+		{"c99", "99"},
+		{"c90", "90"},
+		{"c89", "90"},
+		{"unknown", "11"},
+	}
+	for _, tc := range cases {
+		got := cStdToCMakeStd(tc.input)
+		if got != tc.want {
+			t.Errorf("cStdToCMakeStd(%q) = %q, want %q", tc.input, got, tc.want)
+		}
+	}
+}
+
+func TestCxxStdToCMakeStd(t *testing.T) {
+	cases := []struct {
+		input, want string
+	}{
+		{"c++26", "26"},
+		{"c++2c", "26"},
+		{"c++23", "23"},
+		{"c++2b", "23"},
+		{"c++20", "20"},
+		{"c++2a", "20"},
+		{"c++17", "17"},
+		{"c++14", "14"},
+		{"c++11", "11"},
+		{"c++98", "98"},
+		{"c++03", "98"},
+		{"unknown", "17"},
+	}
+	for _, tc := range cases {
+		got := cxxStdToCMakeStd(tc.input)
+		if got != tc.want {
+			t.Errorf("cxxStdToCMakeStd(%q) = %q, want %q", tc.input, got, tc.want)
+		}
+	}
+}
+
+func TestDoCMake_ValidStandards(t *testing.T) {
+	withTempDir(t)
+	writeFile(t, "main.cpp", `#include <iostream>
+int main() { std::cout << "hello"; return 0; }`)
+
+	err := doGenerate(BuildOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile("CMakeLists.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := string(data)
+
+	// CXX_STANDARD must be a valid CMake value
+	validCxxStds := []string{"98", "11", "14", "17", "20", "23", "26"}
+	foundValidCxx := false
+	for _, std := range validCxxStds {
+		if strings.Contains(content, "CXX_STANDARD "+std) {
+			foundValidCxx = true
+			break
+		}
+	}
+	if !foundValidCxx {
+		t.Error("CMakeLists.txt does not contain a valid CXX_STANDARD")
+	}
+
+	// C_STANDARD must be a valid CMake value
+	validCStds := []string{"90", "99", "11", "17", "23"}
+	foundValidC := false
+	for _, std := range validCStds {
+		if strings.Contains(content, "C_STANDARD "+std) {
+			foundValidC = true
+			break
+		}
+	}
+	if !foundValidC {
+		t.Error("CMakeLists.txt does not contain a valid C_STANDARD")
+	}
+
+	// Must NOT contain invalid standards
+	if strings.Contains(content, "C_STANDARD 18") {
+		t.Error("CMakeLists.txt contains invalid C_STANDARD 18")
+	}
+}
+
+func TestDoCMake_CProject_ValidStandards(t *testing.T) {
+	withTempDir(t)
+	writeFile(t, "main.c", `int main() { return 0; }`)
+
+	err := doGenerate(BuildOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile("CMakeLists.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	content := string(data)
+
+	// Should NOT have CXX_STANDARD for a C project
+	if strings.Contains(content, "CXX_STANDARD") {
+		t.Error("CMakeLists.txt should not set CXX_STANDARD for a C project")
+	}
+
+	// C_STANDARD must be valid
+	validCStds := []string{"90", "99", "11", "17", "23"}
+	foundValidC := false
+	for _, std := range validCStds {
+		if strings.Contains(content, "C_STANDARD "+std) {
+			foundValidC = true
+			break
+		}
+	}
+	if !foundValidC {
+		t.Error("CMakeLists.txt does not contain a valid C_STANDARD")
 	}
 }

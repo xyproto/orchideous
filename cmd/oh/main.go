@@ -36,6 +36,7 @@ oh testbuild    - build tests (without running)
 oh rec          - profile-guided optimization (build, run, rebuild)
 oh fmt          - format source code with clang-format
 oh generate     - generate CMakeLists.txt
+oh makefile     - generate a standalone Makefile
 oh cmake        - build with cmake (prefers ninja, falls back to make)
 oh make         - build with make (falls back to cmake+make)
 oh ninja        - build with ninja (falls back to cmake+ninja)
@@ -144,7 +145,7 @@ func main() {
 		exitOnErr(orchideous.NewConfig().Fmt())
 	case "cmake":
 		exitOnErr(orchideous.NewConfig().CMakeBuild())
-	case "generate":
+	case "generate", "cmakelists", "cmakelist", "cmakelists.txt", "CMakeLists.txt":
 		exitOnErr(orchideous.NewConfig().Generate())
 	case "pro":
 		exitOnErr(orchideous.NewConfig().Pro())
@@ -166,6 +167,8 @@ func main() {
 		exitOnErr(orchideous.NewConfig().Export())
 	case "make":
 		exitOnErr(orchideous.NewConfig().Make())
+	case "makefile":
+		exitOnErr(orchideous.NewConfig().GenerateMakefile())
 	case "script":
 		exitOnErr(orchideous.NewConfig().Script())
 	case "valgrind":
