@@ -4,6 +4,7 @@ go 1.25.1
 
 require (
 	github.com/xyproto/distrodetector v1.3.2
+	github.com/xyproto/env v1.9.1
 	github.com/xyproto/files v1.10.8
 )
 
