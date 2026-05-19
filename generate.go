@@ -684,6 +684,13 @@ func doNinjaClean() {
 // doCleanAll performs comprehensive cleaning: make clean, ninja clean,
 // removes the build/ directory, and cleans regular build artifacts.
 func doCleanAll() {
+	// Guard against recursive invocation (e.g. Makefile clean target calls "oh clean")
+	if env.Bool("OH_CLEANING") {
+		cleanFiles()
+		return
+	}
+	os.Setenv("OH_CLEANING", "1")
+
 	// Try make clean if Makefile exists
 	if fileExists("Makefile") {
 		if _, err := exec.LookPath("make"); err == nil {
