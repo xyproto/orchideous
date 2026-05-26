@@ -68,8 +68,11 @@ cmd/slay/slay
 *.gcda
 *.gcno
 
-examples/hello/hello
 examples/async/async
+examples/box2d/box2d
 examples/designated/designated
 examples/findfiles/findfiles
+examples/glm/glm
+examples/hello/hello
+examples/sdl3/sdl3
 examples/visit/visit
