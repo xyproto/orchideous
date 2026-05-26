@@ -1,4 +1,4 @@
-## Slay <img src="img/slay.png" width="128" align="right">
+## Slay <img src="img/slay.svg" width="128" align="right">
 
 [![CI](https://github.com/xyproto/slay/actions/workflows/ci.yml/badge.svg)](https://github.com/xyproto/slay/actions/workflows/ci.yml)
 ![Standard](https://img.shields.io/badge/C%2B%2B-23-blue.svg)
