@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	ProgName = "oh"
+	ProgName = "slay"
 	ProgURL  = "https://github.com/xyproto/slay"
 )
 
