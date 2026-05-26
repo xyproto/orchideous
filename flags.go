@@ -620,7 +620,7 @@ func isCompilerClang(compiler string) bool {
 
 // isEffectivelyClang returns true if the compiler is clang or acts as clang.
 // On macOS, /usr/bin/g++ and /usr/bin/gcc are Apple clang wrappers, so
-// name-based detection is unreliable — this function checks the version string.
+// name-based detection is unreliable. This function checks the version string.
 func isEffectivelyClang(compiler string) bool {
 	if isCompilerClang(compiler) {
 		return true

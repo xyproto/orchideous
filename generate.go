@@ -91,7 +91,7 @@ func doGenerate(opts BuildOptions) error {
 		fmt.Fprintf(f, "set(CMAKE_CXX_FLAGS \"%s\")\n", strings.Join(filtered, " "))
 	}
 
-	// Link flags (not libraries — goes into LINK_FLAGS, not target_link_libraries)
+	// Link flags (not libraries - goes into LINK_FLAGS, not target_link_libraries)
 	linkFlags := extractLinkFlags(flags.LDFlags)
 	if len(linkFlags) > 0 {
 		fmt.Fprintf(f, "set_property(TARGET %s PROPERTY LINK_FLAGS %s)\n", exe, strings.Join(linkFlags, " "))

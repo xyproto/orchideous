@@ -68,7 +68,7 @@ type winAPIConst struct {
 // winAPIConstants maps Windows API identifiers to their version requirement
 // and fallback values for cross-compilation with older mingw-w64.
 var winAPIConstants = map[string]winAPIConst{
-	// 0x0600 — Windows Vista / Server 2008
+	// 0x0600 - Windows Vista / Server 2008
 	"ENABLE_VIRTUAL_TERMINAL_PROCESSING": {0x0600, "0x0004"},
 	"DISABLE_NEWLINE_AUTO_RETURN":        {0x0600, "0x0008"},
 	"ENABLE_VIRTUAL_TERMINAL_INPUT":      {0x0600, "0x0200"},
@@ -88,15 +88,15 @@ var winAPIConstants = map[string]winAPIConst{
 	"ReleaseSRWLockExclusive":            {0x0600, ""},
 	"AcquireSRWLockShared":               {0x0600, ""},
 	"ReleaseSRWLockShared":               {0x0600, ""},
-	// 0x0601 — Windows 7
+	// 0x0601 - Windows 7
 	"SetProcessDPIAware":          {0x0601, ""},
 	"GetCurrentProcessorNumberEx": {0x0601, ""},
 	"QueryUnbiasedInterruptTime":  {0x0601, ""},
 	"TryAcquireSRWLockExclusive":  {0x0601, ""},
 	"TryAcquireSRWLockShared":     {0x0601, ""},
-	// 0x0602 — Windows 8
+	// 0x0602 - Windows 8
 	"GetSystemTimePreciseAsFileTime": {0x0602, ""},
-	// 0x0A00 — Windows 10
+	// 0x0A00 - Windows 10
 	"CreatePseudoConsole":           {0x0A00, ""},
 	"ClosePseudoConsole":            {0x0A00, ""},
 	"GetDpiForWindow":               {0x0A00, ""},
