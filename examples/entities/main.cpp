@@ -171,7 +171,7 @@ int main()
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_VSYNC_HINT);
-    InitWindow(1280, 720, "Raylib 5 — Bouncing Circles");
+    InitWindow(1280, 720, "Raylib 5 - Bouncing Circles");
 
     while (!WindowShouldClose()) {
         int sw = GetScreenWidth();

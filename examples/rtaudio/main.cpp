@@ -1,8 +1,8 @@
 // Example from the RtAudio documentation (updated for RtAudio 6)
 
-#include <rtaudio/RtAudio.h>
 #include <cstdlib>
 #include <iostream>
+#include <rtaudio/RtAudio.h>
 
 // Two-channel sawtooth wave generator.
 int saw(void* outputBuffer, void* /*inputBuffer*/, unsigned int nBufferFrames, double /*streamTime*/,

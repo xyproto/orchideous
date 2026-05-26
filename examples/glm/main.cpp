@@ -21,7 +21,8 @@ static void print_mat4(const char* label, const glm::mat4& m)
         std::cout << "  [";
         for (int col = 0; col < 4; ++col) {
             std::cout << std::setw(9) << std::fixed << std::setprecision(4) << p[col * 4 + row];
-            if (col < 3) std::cout << ", ";
+            if (col < 3)
+                std::cout << ", ";
         }
         std::cout << "]\n";
     }

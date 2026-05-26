@@ -60,7 +60,9 @@ struct Ray {
     }
 };
 
-enum Refl_t { DIFF, SPEC, REFR }; // material types, used in radiance()
+enum Refl_t { DIFF,
+    SPEC,
+    REFR }; // material types, used in radiance()
 
 struct Sphere {
     double rad; // radius
@@ -100,7 +102,8 @@ Sphere spheres[] = {
     Sphere(600, Vec(50, 681.6 - .27, 81.6), Vec(12, 12, 12), Vec(), DIFF) // Lite
 };
 
-inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; }
+inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1
+                                                         : x; }
 
 inline int toInt(double x) { return int(pow(clamp(x), 1 / 2.2) * 255 + .5); }
 
@@ -123,7 +126,8 @@ Vec radiance(const Ray& r, int depth, unsigned short* Xi)
         return Vec(); // if miss, return black
     const Sphere& obj = spheres[id]; // the hit object
     Vec x = r.o + r.d * t, n = (x - obj.p).norm(), nl = n.dot(r.d) < 0 ? n : n * -1, f = obj.c;
-    double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
+    double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y
+                                                        : f.z; // max refl
     if (++depth > 5)
         if (erand48(Xi) < p) {
             f = f * (1 / p);

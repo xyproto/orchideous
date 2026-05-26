@@ -50,7 +50,8 @@ int main()
     // Get the store name.
     try {
         string name = cfg.lookup("name");
-        std::cout << "Store name: " << name << std::endl << std::endl;
+        std::cout << "Store name: " << name << std::endl
+                  << std::endl;
     } catch (const libconfig::SettingNotFoundException& nfex) {
         std::cerr << "No 'name' setting in configuration file." << std::endl;
     }

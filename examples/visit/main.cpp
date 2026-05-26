@@ -8,7 +8,8 @@ struct LightItem { };
 struct HeavyItem { };
 struct FragileItem { };
 
-template <class... Ts> struct overload : Ts... {
+template <class... Ts>
+struct overload : Ts... {
     using Ts::operator()...;
 };
 

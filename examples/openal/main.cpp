@@ -14,8 +14,8 @@
 #include <AL/alc.h>
 #endif
 
-#define CASE_RETURN(err)                                                                          \
-    case (err):                                                                                   \
+#define CASE_RETURN(err) \
+    case (err):          \
         return "##err"
 const char* al_err_str(ALenum err)
 {
@@ -31,13 +31,13 @@ const char* al_err_str(ALenum err)
 }
 #undef CASE_RETURN
 
-#define __al_check_error(file, line)                                                              \
-    do {                                                                                          \
-        ALenum err = alGetError();                                                                \
-        for (; err != AL_NO_ERROR; err = alGetError()) {                                          \
-            std::cerr << "AL Error " << al_err_str(err) << " at " << file << ":" << line          \
-                      << std::endl;                                                               \
-        }                                                                                         \
+#define __al_check_error(file, line)                                                     \
+    do {                                                                                 \
+        ALenum err = alGetError();                                                       \
+        for (; err != AL_NO_ERROR; err = alGetError()) {                                 \
+            std::cerr << "AL Error " << al_err_str(err) << " at " << file << ":" << line \
+                      << std::endl;                                                      \
+        }                                                                                \
     } while (0)
 
 #define al_check_error() __al_check_error(__FILE__, __LINE__)

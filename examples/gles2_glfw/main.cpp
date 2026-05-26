@@ -75,7 +75,8 @@ GLint common_get_shader_program(
     glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
     if (!success) {
         glGetProgramInfoLog(shader_program, INFOLOG_LEN, nullptr, infoLog);
-        std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED" << std::endl << infoLog << std::endl;
+        std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED" << std::endl
+                  << infoLog << std::endl;
     }
 
     glDeleteShader(vertex_shader);

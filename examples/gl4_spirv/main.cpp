@@ -23,7 +23,9 @@ enum {
     UBLOCK_MATRIX,
 };
 
-enum { VATTR_VERTEX, VATTR_NORMAL, VATTR_TEXCOORD };
+enum { VATTR_VERTEX,
+    VATTR_NORMAL,
+    VATTR_TEXCOORD };
 
 struct vertex {
     float x, y, z;

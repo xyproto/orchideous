@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode({256, 256}), "Audio");
+    sf::RenderWindow window(sf::VideoMode({ 256, 256 }), "Audio");
 
     sf::SoundBuffer buffer;
     std::vector<std::int16_t> samples;
@@ -58,7 +58,7 @@ int main()
     }
 
     (void)buffer.loadFromSamples(samples.data(), samples.size(), 1, 44100,
-                                 {sf::SoundChannel::Mono});
+        { sf::SoundChannel::Mono });
 
     sf::Sound sound(buffer);
     sound.play();
