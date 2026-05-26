@@ -25,7 +25,7 @@ jobs:
       fail-fast: false
       matrix:
         compiler: [gcc, clang]
-        go-version: ["1.24", "1.25", "1.26"]
+        go-version: ["1.25", "1.26"]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
@@ -66,7 +66,7 @@ jobs:
           fi
 
       - name: Build
-        run: go build -v -buildvcs=false -o oh ./cmd/oh
+        run: go build -v -buildvcs=false -o slay ./cmd/slay
 
       - name: Vet
         run: go vet ./...
@@ -80,10 +80,10 @@ jobs:
             export CXX=clang++
             export CC=clang
           fi
-          ./oh -C examples/hello clean
-          ./oh -C examples/hello build
-          ./oh -C examples/hello test
-          ./oh -C examples/hello clean
+          ./slay -C examples/hello clean
+          ./slay -C examples/hello build
+          ./slay -C examples/hello test
+          ./slay -C examples/hello clean
 
       - name: Build examples (best effort)
         run: |
@@ -101,7 +101,7 @@ jobs:
             name=$(basename "$d")
             echo "$skip" | grep -qw "$name" && { printf "=== %-30s SKIP\n" "$d"; continue; }
             printf "=== %-30s" "$d"
-            if ./oh -C "$d" build > build.log 2>&1; then
+            if ./slay -C "$d" build > build.log 2>&1; then
               echo "OK"
             else
               echo "FAIL"
@@ -140,7 +140,7 @@ jobs:
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
       - name: Build
-        run: go build -v -o oh ./cmd/oh
+        run: go build -v -o slay ./cmd/slay
 
       - name: Vet
         run: go vet ./...
@@ -150,20 +150,20 @@ jobs:
 
       - name: Smoke test (hello example)
         run: |
-          ./oh -C examples/hello clean
-          ./oh -C examples/hello build
-          ./oh -C examples/hello test
-          ./oh -C examples/hello clean
+          ./slay -C examples/hello clean
+          ./slay -C examples/hello build
+          ./slay -C examples/hello test
+          ./slay -C examples/hello clean
 
       - name: Build examples
         run: |
           failed=""
-          skip="win64crate"
+          skip="win64crate reactphysics"
           for d in examples/*/; do
             name=$(basename "$d")
             echo "$skip" | grep -qw "$name" && { printf "=== %-30s SKIP\n" "$d"; continue; }
             printf "=== %-30s" "$d"
-            if ./oh -C "$d" build > build.log 2>&1; then
+            if ./slay -C "$d" build > build.log 2>&1; then
               echo "OK"
             else
               echo "FAIL"
@@ -182,7 +182,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: ["1.24", "1.25", "1.26"]
+        go-version: ["1.25", "1.26"]
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v6
@@ -192,7 +192,7 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: Build
-        run: go build -v -buildvcs=false -o oh ./cmd/oh
+        run: go build -v -buildvcs=false -o slay ./cmd/slay
 
       - name: Vet
         run: go vet ./...
@@ -202,10 +202,10 @@ jobs:
 
       - name: Smoke test (hello example)
         run: |
-          ./oh -C examples/hello clean
-          ./oh -C examples/hello build
-          ./oh -C examples/hello test
-          ./oh -C examples/hello clean
+          ./slay -C examples/hello clean
+          ./slay -C examples/hello build
+          ./slay -C examples/hello test
+          ./slay -C examples/hello clean
   # ── Windows (MSYS2 / UCRT64) ──────────────────────────────────────
   windows:
     runs-on: windows-latest
@@ -226,7 +226,7 @@ jobs:
             mingw-w64-ucrt-x86_64-pkg-config
 
       - name: Build
-        run: go build -v -buildvcs=false -o oh.exe ./cmd/oh
+        run: go build -v -buildvcs=false -o slay.exe ./cmd/slay
 
       - name: Vet
         run: go vet ./...
@@ -236,10 +236,10 @@ jobs:
 
       - name: Smoke test (hello example)
         run: |
-          ./oh.exe -C examples/hello clean
-          ./oh.exe -C examples/hello build
-          ./oh.exe -C examples/hello test
-          ./oh.exe -C examples/hello clean
+          ./slay.exe -C examples/hello clean
+          ./slay.exe -C examples/hello build
+          ./slay.exe -C examples/hello test
+          ./slay.exe -C examples/hello clean
 
   # ── FreeBSD ────────────────────────────────────────────────────────
   freebsd:
@@ -251,13 +251,13 @@ jobs:
           prepare: |
             pkg install -y go pkgconf
           run: |
-            go build -v -buildvcs=false -o oh ./cmd/oh
+            go build -v -buildvcs=false -o slay ./cmd/slay
             go vet ./...
             go test -v -count=1 ./...
-            ./oh -C examples/hello clean
-            ./oh -C examples/hello build
-            ./oh -C examples/hello test
-            ./oh -C examples/hello clean
+            ./slay -C examples/hello clean
+            ./slay -C examples/hello build
+            ./slay -C examples/hello test
+            ./slay -C examples/hello clean
 
   # ── OpenBSD ────────────────────────────────────────────────────────
   openbsd:
@@ -271,13 +271,13 @@ jobs:
           run: |
             export CXX=eg++
             export CC=egcc
-            go build -v -buildvcs=false -o oh ./cmd/oh
+            go build -v -buildvcs=false -o slay ./cmd/slay
             go vet ./...
             go test -v -count=1 ./...
-            ./oh -C examples/hello clean
-            ./oh -C examples/hello build
-            ./oh -C examples/hello test
-            ./oh -C examples/hello clean
+            ./slay -C examples/hello clean
+            ./slay -C examples/hello build
+            ./slay -C examples/hello test
+            ./slay -C examples/hello clean
 
 #  # ── NetBSD ─────────────────────────────────────────────────────────
 #  netbsd:
@@ -292,10 +292,10 @@ jobs:
 #            export PATH="/usr/pkg/go/bin:/usr/pkg/bin:$PATH"
 #            export CXX=clang++
 #            export CC=clang
-#            go build -v -buildvcs=false -o oh ./cmd/oh
+#            go build -v -buildvcs=false -o slay ./cmd/slay
 #            go vet ./...
 #            go test -v -count=1 ./...
-#            ./oh -C examples/hello clean
-#            ./oh -C examples/hello build
-#            ./oh -C examples/hello test
-#            ./oh -C examples/hello clean
+#            ./slay -C examples/hello clean
+#            ./slay -C examples/hello build
+#            ./slay -C examples/hello test
+#            ./slay -C examples/hello clean

@@ -50,6 +50,7 @@ func TestPkgNameFromInclude(t *testing.T) {
 		{"glm/vec3.hpp", "glm"},
 		{"vulkan/vulkan.h", "vulkan"},
 		{"raylib.h", "raylib"},
+		{"mathematics/mathematics.h", "reactphysics3d"},
 		{"QApplication", ""},
 	}
 	for _, tc := range cases {

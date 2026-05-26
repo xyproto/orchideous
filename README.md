@@ -339,7 +339,7 @@ The formatting style is fixed and not configurable, on purpose.
 
 ```sh
 sudo pacman -S --needed base-devel boost fcgi freeglut glew glfw glibmm glm glu \
-  gtk4 libconfig libpipewire libx11 openal qt6-base raylib reactphysics3d \
+  gtk4 libconfig libpipewire libx11 openal qt6-base raylib \
   rtaudio sdl2-compat sdl2_mixer sfml vte4 vulkan-headers vulkan-icd-loader
 ```
 
@@ -353,7 +353,7 @@ sudo apt-get install -y build-essential pkg-config \
   libvte-2.91-gtk4-dev libvulkan-dev libx11-dev freeglut3-dev qt6-base-dev
 ```
 
-Note: `raylib` and `reactphysics3d` are not available in Ubuntu repositories. Ubuntu 24.04 ships SFML 2 and rtaudio 5, while the included examples use SFML 3 and rtaudio 6 APIs — those examples will be skipped on Ubuntu. Examples that depend on unavailable libraries are automatically skipped in CI.
+Note: `raylib` and `reactphysics3d` are not available in Ubuntu repositories and `reactphysics3d` is no longer in the official Arch Linux repositories. Ubuntu 24.04 ships SFML 2 and rtaudio 5, while the included examples use SFML 3 and rtaudio 6 APIs — those examples will be skipped on Ubuntu. Examples that depend on unavailable libraries are automatically skipped in CI.
 
 ## Platform Notes
 

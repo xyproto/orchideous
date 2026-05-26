@@ -7,23 +7,25 @@ import (
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/xyproto/env/v2"
 )
 
 func TestDetectPlatformType_Windows(t *testing.T) {
 	if runtime.GOOS != "windows" {
 		t.Skip("windows-only test")
 	}
-	// Without MSYSTEM or VCPKG_ROOT, should return "generic"
+	env.Unload()
 	origMSYSTEM := os.Getenv("MSYSTEM")
 	origVCPKG := os.Getenv("VCPKG_ROOT")
-	os.Unsetenv("MSYSTEM")
-	os.Unsetenv("VCPKG_ROOT")
+	env.Unset("MSYSTEM")
+	env.Unset("VCPKG_ROOT")
 	defer func() {
 		if origMSYSTEM != "" {
-			os.Setenv("MSYSTEM", origMSYSTEM)
+			env.Set("MSYSTEM", origMSYSTEM)
 		}
 		if origVCPKG != "" {
-			os.Setenv("VCPKG_ROOT", origVCPKG)
+			env.Set("VCPKG_ROOT", origVCPKG)
 		}
 	}()
 
@@ -38,9 +40,10 @@ func TestVcpkgRoot_Env(t *testing.T) {
 	if runtime.GOOS != "windows" {
 		t.Skip("windows-only test")
 	}
+	env.Unload()
 	dir := t.TempDir()
-	os.Setenv("VCPKG_ROOT", dir)
-	defer os.Unsetenv("VCPKG_ROOT")
+	env.Set("VCPKG_ROOT", dir)
+	defer env.Unset("VCPKG_ROOT")
 
 	got := vcpkgRoot()
 	if got != dir {
@@ -52,7 +55,8 @@ func TestVcpkgTriplet_Default(t *testing.T) {
 	if runtime.GOOS != "windows" {
 		t.Skip("windows-only test")
 	}
-	os.Unsetenv("VCPKG_DEFAULT_TRIPLET")
+	env.Unload()
+	env.Unset("VCPKG_DEFAULT_TRIPLET")
 	got := vcpkgTriplet()
 	if got != "x64-windows" {
 		t.Errorf("vcpkgTriplet() = %q, want %q", got, "x64-windows")
@@ -63,8 +67,9 @@ func TestVcpkgTriplet_CustomEnv(t *testing.T) {
 	if runtime.GOOS != "windows" {
 		t.Skip("windows-only test")
 	}
-	os.Setenv("VCPKG_DEFAULT_TRIPLET", "x64-mingw-static")
-	defer os.Unsetenv("VCPKG_DEFAULT_TRIPLET")
+	env.Unload()
+	env.Set("VCPKG_DEFAULT_TRIPLET", "x64-mingw-static")
+	defer env.Unset("VCPKG_DEFAULT_TRIPLET")
 
 	got := vcpkgTriplet()
 	if got != "x64-mingw-static" {
@@ -76,14 +81,15 @@ func TestVcpkgInstalledDir(t *testing.T) {
 	if runtime.GOOS != "windows" {
 		t.Skip("windows-only test")
 	}
+	env.Unload()
 	root := t.TempDir()
 	triplet := "x64-windows"
 	installedDir := filepath.Join(root, "installed", triplet)
 	os.MkdirAll(installedDir, 0o755)
 
-	os.Setenv("VCPKG_ROOT", root)
-	os.Unsetenv("VCPKG_DEFAULT_TRIPLET")
-	defer os.Unsetenv("VCPKG_ROOT")
+	env.Set("VCPKG_ROOT", root)
+	env.Unset("VCPKG_DEFAULT_TRIPLET")
+	defer env.Unset("VCPKG_ROOT")
 
 	got := vcpkgInstalledDir()
 	if got != installedDir {
@@ -95,15 +101,16 @@ func TestExtraWindowsIncludeDirs_Vcpkg(t *testing.T) {
 	if runtime.GOOS != "windows" {
 		t.Skip("windows-only test")
 	}
+	env.Unload()
 	root := t.TempDir()
 	triplet := "x64-windows"
 	incDir := filepath.Join(root, "installed", triplet, "include")
 	os.MkdirAll(incDir, 0o755)
 
-	os.Setenv("VCPKG_ROOT", root)
-	os.Unsetenv("VCPKG_DEFAULT_TRIPLET")
-	os.Unsetenv("MSYSTEM")
-	defer os.Unsetenv("VCPKG_ROOT")
+	env.Set("VCPKG_ROOT", root)
+	env.Unset("VCPKG_DEFAULT_TRIPLET")
+	env.Unset("MSYSTEM")
+	defer env.Unset("VCPKG_ROOT")
 
 	dirs := extraWindowsIncludeDirs()
 	found := false
@@ -183,16 +190,17 @@ func TestSystemIncludeDirs_Windows(t *testing.T) {
 	if runtime.GOOS != "windows" {
 		t.Skip("windows-only test")
 	}
+	env.Unload()
 	// With a vcpkg root, systemIncludeDirs should include vcpkg paths
 	root := t.TempDir()
 	triplet := "x64-windows"
 	incDir := filepath.Join(root, "installed", triplet, "include")
 	os.MkdirAll(incDir, 0o755)
 
-	os.Setenv("VCPKG_ROOT", root)
-	os.Unsetenv("VCPKG_DEFAULT_TRIPLET")
-	os.Unsetenv("MSYSTEM")
-	defer os.Unsetenv("VCPKG_ROOT")
+	env.Set("VCPKG_ROOT", root)
+	env.Unset("VCPKG_DEFAULT_TRIPLET")
+	env.Unset("MSYSTEM")
+	defer env.Unset("VCPKG_ROOT")
 
 	dirs := systemIncludeDirs()
 	found := false

@@ -100,9 +100,12 @@ func pkgNameFromInclude(inc string) string {
 		"libconfig.h++":       "libconfig++",
 		"libconfig.h":         "libconfig",
 		"fcgiapp.h":           "fcgi",
-		"pipewire/pipewire.h": "libpipewire-0.3",
-		"rtaudio/rtaudio.h":   "rtaudio",
-		"raylib.h":            "raylib",
+		"pipewire/pipewire.h":              "libpipewire-0.3",
+		"rtaudio/rtaudio.h":                "rtaudio",
+		"raylib.h":                         "raylib",
+		"mathematics/mathematics.h":        "reactphysics3d",
+		"reactphysics3d.h":                 "reactphysics3d",
+		"reactphysics3d/reactphysics3d.h":  "reactphysics3d",
 	}
 
 	for pattern, pkg := range mappings {

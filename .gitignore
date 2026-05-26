@@ -59,6 +59,7 @@ venv/
 # Rust
 target/
 
+/slay
 cmd/slay/slay
 
 # Profiling etc
