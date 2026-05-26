@@ -78,51 +78,74 @@ sudo ln -sf ~/go/bin/slay /usr/local/bin/slay
 
 ## All Commands
 
+Slay uses a composable command syntax: combine **modifiers** with an **action**.
+
+### Modifiers (combinable)
+
 ```
-slay                  build the project
-slay run              build and run
-slay debug            debug build and launch debugger (gdb/cgdb)
-slay debugbuild       debug build (without launching debugger)
-slay debugnosan       debug build (without sanitizers)
-slay opt              optimized build
-slay strict           build with strict warning flags
-slay sloppy           build with sloppy flags
-slay small            build a smaller executable
-slay tiny             build a tiny executable (+ sstrip/upx)
-slay clang            build using clang++
-slay clangdebug       debug build using clang++ (launches lldb)
-slay clangstrict      use clang++ and strict flags
-slay clangsloppy      use clang++ and sloppy flags
-slay clangrebuild     clean and build with clang++
-slay clangtest        build and run tests with clang++
-slay clean            remove built files
-slay fastclean        only remove executable and *.o
-slay rebuild          clean and build
-slay test             build and run tests
-slay testbuild        build tests (without running)
-slay rec              profile-guided optimization (build, run, rebuild)
-slay fmt              format source code with clang-format
-slay generate         generate CMakeLists.txt
-slay cmake            build with cmake (generates CMakeLists.txt if needed, prefers ninja)
-slay ninja            build with ninja (falls back to cmake+ninja)
-slay ninja_install    install from ninja build
-slay ninja_clean      clean ninja build
-slay make             build with make (falls back to cmake+make)
-slay make_install     install from cmake+make build
-slay make_clean       clean cmake+make build
-slay pro              generate QtCreator project file
-slay install          install the project (PREFIX, DESTDIR)
-slay pkg              package the project into pkg/
-slay export           export a standalone Makefile and build.sh
-slay script           generate build.sh and clean.sh
-slay valgrind         build and profile with valgrind
-slay win64            cross-compile for 64-bit Windows
-slay smallwin64       small win64 build
-slay tinywin64        tiny win64 build
-slay zap              build using zapcc++
-slay version          show version
-slay -C <dir> ...     run in the given directory
+clang       use clang/clang++ compiler
+zap         use zapcc++ compiler
+debug       enable debug flags and sanitizers
+nosan       disable sanitizers (use with debug)
+opt         enable optimizations (-Ofast/-O3, -flto)
+strict      enable strict warning flags
+sloppy      enable permissive flags
+small       optimize for size (-Os)
+tiny        minimize size (-Os + sstrip/upx)
+win64       cross-compile for 64-bit Windows
 ```
+
+### Actions
+
+```
+build       compile the project (default)
+run         build and run
+debug       debug build and launch debugger
+rebuild     clean and build
+clean       remove built files
+fastclean   only remove executable and *.o
+test        build and run tests
+testbuild   build tests (without running)
+pgo         profile-guided optimization (build, run, rebuild)
+fmt         format source code with clang-format
+generate    generate CMakeLists.txt
+makefile    generate a standalone Makefile
+cmake       build with cmake (prefers ninja, falls back to make)
+make        build with make (falls back to cmake+make)
+ninja       build with ninja (falls back to cmake+ninja)
+install     install the project (PREFIX, DESTDIR)
+pkg         package the project into pkg/
+export      export a standalone Makefile and build.sh
+script      generate build.sh and clean.sh
+valgrind    build and profile with valgrind
+pro         generate QtCreator project file
+version     show version
+```
+
+### Compound actions
+
+```
+ninjainstall  install from ninja build
+ninjaclean    clean ninja build
+makeinstall   install from make/cmake+make build
+makeclean     clean make/cmake+make build
+```
+
+### Examples
+
+```sh
+slay                    # standard build
+slay clang              # build with clang
+slay clang strict       # build with clang and strict warnings
+slay debug              # debug build and launch debugger
+slay debug build        # debug build (without launching debugger)
+slay clang debug        # clang debug build and launch debugger
+slay opt run            # optimized build and run
+slay small win64        # size-optimized cross-compile for Windows
+slay -C <dir> ...      # run in the given directory
+```
+
+Legacy compound commands (`debugbuild`, `clangstrict`, `smallwin64`, etc.) are still accepted.
 
 ## Example Use
 
@@ -195,7 +218,7 @@ slay rebuild
 Build with profile-guided optimization:
 
 ```sh
-slay rec    # builds, runs (collecting profiling data), then rebuilds with PGO
+slay pgo    # builds, runs (collecting profiling data), then rebuilds with PGO
 slay        # subsequent builds use the profiling data
 ```
 
@@ -250,7 +273,8 @@ Slay auto-detects libraries from `#include` directives in your source files usin
 * **Graphics**: OpenGL, GLUT, GLFW, GLEW, GLM, Vulkan, SDL (2 & 3), SFML (2 & 3), raylib
 * **GUI**: GTK (2, 3 & 4), Qt6, VTE
 * **Audio**: OpenAL, SDL2_mixer, PipeWire, rtaudio
-* **Other**: Boost, libconfig++, FastCGI, ReactPhysics3D, Gio/GLib, X11
+* **Physics**: Box2D, ReactPhysics3D
+* **Other**: Boost, libconfig++, FastCGI, Gio/GLib, X11
 
 For versioned libraries, the newest available version is preferred (e.g. GTK 4 over GTK 3, SFML 3 over SFML 2).
 
@@ -263,10 +287,11 @@ Over 40 examples are included in the `examples/` directory:
 | Category | Examples |
 |---|---|
 | **Basics** | `hello`, `args`, `lambda`, `defer`, `invoke`, `visit`, `async`, `designated`, `entities`, `validorder`, `findfiles`, `platforms`, `config` |
-| **Graphics** | `sfml`, `sfml_audio`, `bisqwit`, `sdl2`, `sdl2_opengl`, `gl4_spirv`, `gles2_glfw`, `gles3_glfw`, `gles3_sdl2`, `raylib`, `raylib5`, `vulkan`, `vulkan_glfw`, `x11`, `x11_opengl`, `smallpt` |
+| **Graphics** | `sfml`, `sfml_audio`, `bisqwit`, `sdl2`, `sdl2_opengl`, `sdl3`, `gles3_sdl3`, `gl4_spirv`, `gles2_glfw`, `gles3_glfw`, `glm`, `raylib`, `raylib5`, `vulkan`, `vulkan_glfw`, `x11`, `x11_opengl`, `smallpt` |
 | **GUI** | `gtk4`, `gtk4ui`, `dunnetgtk`, `qt6` |
 | **Audio** | `openal`, `synth`, `mixer`, `pipewire`, `rtaudio` |
-| **Other** | `boost`, `boost_thread`, `notify`, `reactphysics`, `fastcgi`, `tinyhello`, `win64crate` |
+| **Physics** | `box2d`, `reactphysics` |
+| **Other** | `boost`, `boost_thread`, `notify`, `fastcgi`, `tinyhello`, `win64crate` |
 
 Build all examples:
 
@@ -300,8 +325,8 @@ Build for 64-bit Windows (requires `x86_64-w64-mingw32-g++` or Docker):
 
 ```sh
 slay win64
-slay smallwin64
-slay tinywin64
+slay small win64
+slay tiny win64
 ```
 
 Test Windows executables with Wine:
@@ -338,9 +363,9 @@ The formatting style is fixed and not configurable, on purpose.
 ### Arch Linux (all examples)
 
 ```sh
-sudo pacman -S --needed base-devel boost fcgi freeglut glew glfw glibmm glm glu \
+sudo pacman -S --needed base-devel boost box2d fcgi freeglut glew glfw glibmm glm glu \
   gtk4 libconfig libpipewire libx11 openal qt6-base raylib \
-  rtaudio sdl2-compat sdl2_mixer sfml vte4 vulkan-headers vulkan-icd-loader
+  rtaudio sdl2-compat sdl2_mixer sdl3 sfml vte4 vulkan-headers vulkan-icd-loader
 ```
 
 ### Debian / Ubuntu (all examples)
