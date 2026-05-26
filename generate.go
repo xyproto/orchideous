@@ -1,4 +1,4 @@
-package orchideous
+package slay
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ import (
 
 var (
 	ProgName = "oh"
-	ProgURL  = "https://github.com/xyproto/orchideous"
+	ProgURL  = "https://github.com/xyproto/slay"
 )
 
 // doGenerate generates a CMakeLists.txt file.
@@ -684,7 +684,7 @@ func doNinjaClean() {
 // doCleanAll performs comprehensive cleaning: make clean, ninja clean,
 // removes the build/ directory, and cleans regular build artifacts.
 func doCleanAll() {
-	// Guard against recursive invocation (e.g. Makefile clean target calls "oh clean")
+	// Guard against recursive invocation (e.g. Makefile clean target calls "slay clean")
 	if env.Bool("OH_CLEANING") {
 		cleanFiles()
 		return

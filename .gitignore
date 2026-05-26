@@ -50,11 +50,6 @@ cmd/*/*
 # Orbiton include.txt file
 include.txt
 
-# Java and Kotlin
-build/
-.gradle/
-.kotlin/
-
 # Python
 __pycache__/
 *.py[cod]
@@ -64,14 +59,7 @@ venv/
 # Rust
 target/
 
-orchideous
-/oh
-
-# Emacs
-\#*#
-
-# QtCreator
-*.pro
+cmd/slay/slay
 
 # Profiling etc
 *.profdata

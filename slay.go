@@ -1,4 +1,4 @@
-package orchideous
+package slay
 
 // Exported wrappers for the internal functions.
 

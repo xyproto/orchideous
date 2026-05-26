@@ -1,6 +1,6 @@
 //go:build solaris || illumos
 
-package orchideous
+package slay
 
 func isLinux() bool  { return false }
 func isDarwin() bool { return false }

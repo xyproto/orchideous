@@ -1,10 +1,10 @@
-# Raylib 5 — Bouncing Circles
+# Raylib 5 - Bouncing Circles
 
 A modern replacement for the old EntityX + SFML2 example.
 
 500 coloured circles bounce around the screen. When two collide they
 explode into a shower of fading particles. Uses a data-oriented
-struct-of-arrays layout — the contemporary way to organise entity data
+struct-of-arrays layout - the contemporary way to organise entity data
 in C++ without pulling in a heavyweight ECS framework.
 
 ## Dependencies
@@ -13,4 +13,4 @@ in C++ without pulling in a heavyweight ECS framework.
 
 ## Build
 
-    orchideous build
+    slay build

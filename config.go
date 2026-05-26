@@ -1,4 +1,4 @@
-package orchideous
+package slay
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"github.com/xyproto/files"
 )
 
-// Config holds the full configuration for an orchideous operation.
+// Config holds the full configuration for an slay operation.
 type Config struct {
 	BuildOptions
 	SourceDir string // if set, operate in this directory instead of the current one

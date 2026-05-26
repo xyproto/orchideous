@@ -1,6 +1,6 @@
-## Orchideous <img src="img/orchideous.svg" width="128" align="right">
+## Slay <img src="img/slay.svg" width="128" align="right">
 
-[![CI](https://github.com/xyproto/orchideous/actions/workflows/ci.yml/badge.svg)](https://github.com/xyproto/orchideous/actions/workflows/ci.yml)
+[![CI](https://github.com/xyproto/slay/actions/workflows/ci.yml/badge.svg)](https://github.com/xyproto/slay/actions/workflows/ci.yml)
 ![Standard](https://img.shields.io/badge/C%2B%2B-23-blue.svg)
 [![License](https://img.shields.io/badge/license-BSD3-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
@@ -8,21 +8,21 @@ Zero-configuration build tool for C and C++ projects.
 
 Have you ever had a single `main.cpp` file that you just want to compile, without having to make sure the order of flags are correct and ideally without having to provide any flags at all?
 
-**Orchideous** (or `oh` for short) handles compiler detection, flag ordering, library discovery via `pkg-config`, testing, formatting, cross-compilation, etc., without a single configuration file.
+**Slay** (or `slay` for short) handles compiler detection, flag ordering, library discovery via `pkg-config`, testing, formatting, cross-compilation, etc., without a single configuration file.
 
-It should be possible to compile all of the examples in the `examples` directory, simply by running `oh` in each directory, as long as the right packages and libraries have been installed.
+It should be possible to compile all of the examples in the `examples` directory, simply by running `slay` in each directory, as long as the right packages and libraries have been installed.
 
 This is a Go port of [xyproto/cxx](https://github.com/xyproto/cxx) (which does approximately the same, but uses Python + Scons instead).
 
 ## Quick Start
 
 ```sh
-oh              # build the project
-oh run          # build and run
-oh clean        # remove built files
+slay              # build the project
+slay run          # build and run
+slay clean        # remove built files
 ```
 
-No configuration files are needed, but the project needs to either be very simple (a single `main.cpp`) or have an `oh`-friendly directory structure.
+No configuration files are needed, but the project needs to either be very simple (a single `main.cpp`) or have an `slay`-friendly directory structure.
 
 The auto-detection of external libraries and headers relies on them being included in the main source file.
 
@@ -30,23 +30,23 @@ The auto-detection of external libraries and headers relies on them being includ
 
 If you like, you can add this shield to your project to indicate that it can be compiled without any particular build-related configuration:
 
-![Compiles with Orchideous](https://img.shields.io/badge/Compiles_with-Orchideous-2fc298)
+![Compiles with Slay](https://img.shields.io/badge/Compiles_with-Slay-2fc298)
 
-Just make sure that it builds with `oh` first, then add this to your `README.md`:
+Just make sure that it builds with `slay` first, then add this to your `README.md`:
 
 ```markdown
-[![Compiles with Orchideous](https://img.shields.io/badge/Compiles_with-Orchideous-2fc298)](https://github.com/xyproto/orchideous)
+[![Compiles with Slay](https://img.shields.io/badge/Compiles_with-Slay-2fc298)](https://github.com/xyproto/slay)
 ```
 
-It is also possible to add it to [the list of projects that compiles with Orchideous](https://github.com/xyproto/orchideous/wiki/List-of-projects-that-compile-with-Orchideous).
+It is also possible to add it to [the list of projects that compiles with Slay](https://github.com/xyproto/slay/wiki/List-of-projects-that-compile-with-Slay).
 
 ## Installation
 
 ### Arch Linux
 
 ```sh
-git clone https://github.com/xyproto/orchideous
-cd orchideous
+git clone https://github.com/xyproto/slay
+cd slay
 make
 sudo make install
 ```
@@ -54,8 +54,8 @@ sudo make install
 ### Other Linux distros, FreeBSD, NetBSD, macOS
 
 ```sh
-git clone https://github.com/xyproto/orchideous
-cd orchideous
+git clone https://github.com/xyproto/slay
+cd slay
 make
 sudo make install    # use gmake on BSD
 ```
@@ -63,8 +63,8 @@ sudo make install    # use gmake on BSD
 ### Windows (MSYS2)
 
 ```sh
-git clone https://github.com/xyproto/orchideous
-cd orchideous
+git clone https://github.com/xyproto/slay
+cd slay
 make
 make install
 ```
@@ -72,56 +72,56 @@ make install
 Or with `go install`:
 
 ```sh
-go install github.com/xyproto/orchideous/cmd/oh@latest
-sudo ln -sf ~/go/bin/oh /usr/local/bin/oh
+go install github.com/xyproto/slay/cmd/slay@latest
+sudo ln -sf ~/go/bin/slay /usr/local/bin/slay
 ```
 
 ## All Commands
 
 ```
-oh                  build the project
-oh run              build and run
-oh debug            debug build and launch debugger (gdb/cgdb)
-oh debugbuild       debug build (without launching debugger)
-oh debugnosan       debug build (without sanitizers)
-oh opt              optimized build
-oh strict           build with strict warning flags
-oh sloppy           build with sloppy flags
-oh small            build a smaller executable
-oh tiny             build a tiny executable (+ sstrip/upx)
-oh clang            build using clang++
-oh clangdebug       debug build using clang++ (launches lldb)
-oh clangstrict      use clang++ and strict flags
-oh clangsloppy      use clang++ and sloppy flags
-oh clangrebuild     clean and build with clang++
-oh clangtest        build and run tests with clang++
-oh clean            remove built files
-oh fastclean        only remove executable and *.o
-oh rebuild          clean and build
-oh test             build and run tests
-oh testbuild        build tests (without running)
-oh rec              profile-guided optimization (build, run, rebuild)
-oh fmt              format source code with clang-format
-oh generate         generate CMakeLists.txt
-oh cmake            build with cmake (generates CMakeLists.txt if needed, prefers ninja)
-oh ninja            build with ninja (falls back to cmake+ninja)
-oh ninja_install    install from ninja build
-oh ninja_clean      clean ninja build
-oh make             build with make (falls back to cmake+make)
-oh make_install     install from cmake+make build
-oh make_clean       clean cmake+make build
-oh pro              generate QtCreator project file
-oh install          install the project (PREFIX, DESTDIR)
-oh pkg              package the project into pkg/
-oh export           export a standalone Makefile and build.sh
-oh script           generate build.sh and clean.sh
-oh valgrind         build and profile with valgrind
-oh win64            cross-compile for 64-bit Windows
-oh smallwin64       small win64 build
-oh tinywin64        tiny win64 build
-oh zap              build using zapcc++
-oh version          show version
-oh -C <dir> ...     run in the given directory
+slay                  build the project
+slay run              build and run
+slay debug            debug build and launch debugger (gdb/cgdb)
+slay debugbuild       debug build (without launching debugger)
+slay debugnosan       debug build (without sanitizers)
+slay opt              optimized build
+slay strict           build with strict warning flags
+slay sloppy           build with sloppy flags
+slay small            build a smaller executable
+slay tiny             build a tiny executable (+ sstrip/upx)
+slay clang            build using clang++
+slay clangdebug       debug build using clang++ (launches lldb)
+slay clangstrict      use clang++ and strict flags
+slay clangsloppy      use clang++ and sloppy flags
+slay clangrebuild     clean and build with clang++
+slay clangtest        build and run tests with clang++
+slay clean            remove built files
+slay fastclean        only remove executable and *.o
+slay rebuild          clean and build
+slay test             build and run tests
+slay testbuild        build tests (without running)
+slay rec              profile-guided optimization (build, run, rebuild)
+slay fmt              format source code with clang-format
+slay generate         generate CMakeLists.txt
+slay cmake            build with cmake (generates CMakeLists.txt if needed, prefers ninja)
+slay ninja            build with ninja (falls back to cmake+ninja)
+slay ninja_install    install from ninja build
+slay ninja_clean      clean ninja build
+slay make             build with make (falls back to cmake+make)
+slay make_install     install from cmake+make build
+slay make_clean       clean cmake+make build
+slay pro              generate QtCreator project file
+slay install          install the project (PREFIX, DESTDIR)
+slay pkg              package the project into pkg/
+slay export           export a standalone Makefile and build.sh
+slay script           generate build.sh and clean.sh
+slay valgrind         build and profile with valgrind
+slay win64            cross-compile for 64-bit Windows
+slay smallwin64       small win64 build
+slay tinywin64        tiny win64 build
+slay zap              build using zapcc++
+slay version          show version
+slay -C <dir> ...     run in the given directory
 ```
 
 ## Example Use
@@ -183,20 +183,20 @@ int main(int argc, char** argv)
 Then build and run:
 
 ```sh
-oh run
+slay run
 ```
 
 Rebuild from scratch:
 
 ```sh
-oh rebuild
+slay rebuild
 ```
 
 Build with profile-guided optimization:
 
 ```sh
-oh rec    # builds, runs (collecting profiling data), then rebuilds with PGO
-oh        # subsequent builds use the profiling data
+slay rec    # builds, runs (collecting profiling data), then rebuilds with PGO
+slay        # subsequent builds use the profiling data
 ```
 
 ## Directory Structure
@@ -218,7 +218,7 @@ myproject/
 
 * The main source file can live in the project root or `src/`.
 * The executable name matches the parent directory name.
-* Files ending with `_test.*` are compiled separately by `oh test`.
+* Files ending with `_test.*` are compiled separately by `slay test`.
 * `include/` and `common/` can also be at `../include` and `../common`.
 
 ## Defines
@@ -241,11 +241,11 @@ See `examples/sdl2`, `examples/win64crate` (uses `IMGDIR`) and `examples/mixer` 
 
 * Source files can have corresponding `_test` files (e.g. `quaternions.cc` → `quaternions_test.cc`).
 * Each `_test.*` file must contain its own `main` function.
-* Run with `oh test`.
+* Run with `slay test`.
 
 ## Library Auto-Detection
 
-Orchideous auto-detects libraries from `#include` directives in your source files using `pkg-config`. Supported libraries include:
+Slay auto-detects libraries from `#include` directives in your source files using `pkg-config`. Supported libraries include:
 
 * **Graphics**: OpenGL, GLUT, GLFW, GLEW, GLM, Vulkan, SDL (2 & 3), SFML (2 & 3), raylib
 * **GUI**: GTK (2, 3 & 4), Qt6, VTE
@@ -254,7 +254,7 @@ Orchideous auto-detects libraries from `#include` directives in your source file
 
 For versioned libraries, the newest available version is preferred (e.g. GTK 4 over GTK 3, SFML 3 over SFML 2).
 
-When a build fails due to a missing header, Orchideous will suggest which package to install (using `pkgfile` on Arch Linux or `apt-file` on Debian/Ubuntu).
+When a build fails due to a missing header, Slay will suggest which package to install (using `pkgfile` on Arch Linux or `apt-file` on Debian/Ubuntu).
 
 ## Examples
 
@@ -279,19 +279,19 @@ make examples
 Install to a package directory:
 
 ```sh
-DESTDIR="$pkgdir" PREFIX=/usr oh install
+DESTDIR="$pkgdir" PREFIX=/usr slay install
 ```
 
 Or package into a local `pkg/` directory:
 
 ```sh
-oh pkg
+slay pkg
 ```
 
-Generate standalone build files for users without `oh`:
+Generate standalone build files for users without `slay`:
 
 ```sh
-oh export    # generates Makefile + build.sh + clean.sh
+slay export    # generates Makefile + build.sh + clean.sh
 ```
 
 ## Cross-Compilation
@@ -299,21 +299,21 @@ oh export    # generates Makefile + build.sh + clean.sh
 Build for 64-bit Windows (requires `x86_64-w64-mingw32-g++` or Docker):
 
 ```sh
-oh win64
-oh smallwin64
-oh tinywin64
+slay win64
+slay smallwin64
+slay tinywin64
 ```
 
 Test Windows executables with Wine:
 
 ```sh
-oh run    # after oh win64, uses wine automatically
+slay run    # after slay win64, uses wine automatically
 ```
 
 ## Source Code Formatting
 
 ```sh
-oh fmt    # formats source code using clang-format (Webkit style)
+slay fmt    # formats source code using clang-format (Webkit style)
 ```
 
 The formatting style is fixed and not configurable, on purpose.
@@ -326,14 +326,14 @@ The formatting style is fixed and not configurable, on purpose.
 
 ### Optional
 
-* `clang++` — build with `oh clang`
+* `clang++` — build with `slay clang`
 * `lldb` or `gdb` — for debugging
 * `pkgfile` (Arch Linux) or `apt-file` (Debian/Ubuntu) — for missing-package suggestions
 * `x86_64-w64-mingw32-g++` or `docker` — for Windows cross-compilation
 * `wine` — for testing Windows executables
-* `valgrind` — for profiling (`oh valgrind`)
-* `clang-format` — for `oh fmt`
-* `ninja` — for `oh ninja` / `oh cmake ninja`
+* `valgrind` — for profiling (`slay valgrind`)
+* `clang-format` — for `slay fmt`
+* `ninja` — for `slay ninja` / `slay cmake ninja`
 
 ### Arch Linux (all examples)
 
@@ -379,7 +379,7 @@ pkgin install pkgconf gmake
 
 ### OpenBSD
 
-Install g++ 11+ and build with `oh CXX=eg++`.
+Install g++ 11+ and build with `slay CXX=eg++`.
 
 ### Windows
 
@@ -392,7 +392,7 @@ pacman -S mingw-w64-x86_64-gcc mingw-w64-x86_64-pkg-config
 pacman -S mingw-w64-x86_64-SDL2   # example: install SDL2
 ```
 
-Orchideous auto-detects the MSYS2 environment via the `MSYSTEM` variable and uses pacman for package resolution, similar to Arch Linux.
+Slay auto-detects the MSYS2 environment via the `MSYSTEM` variable and uses pacman for package resolution, similar to Arch Linux.
 
 **vcpkg**: Install [vcpkg](https://vcpkg.io/) and set `VCPKG_ROOT` or add `vcpkg` to your PATH:
 
@@ -400,7 +400,7 @@ Orchideous auto-detects the MSYS2 environment via the `MSYSTEM` variable and use
 vcpkg install sdl2   # example: install SDL2
 ```
 
-Orchideous uses vcpkg's pkg-config files and installed tree for library resolution. The default triplet is `x64-windows` (override with `VCPKG_DEFAULT_TRIPLET`).
+Slay uses vcpkg's pkg-config files and installed tree for library resolution. The default triplet is `x64-windows` (override with `VCPKG_DEFAULT_TRIPLET`).
 
 In both cases, a GCC or Clang compiler must be available on PATH.
 
@@ -409,7 +409,7 @@ In both cases, a GCC or Clang compiler must be available on PATH.
 * **No configuration files needed** — follows the directory structure conventions above.
 * **Auto-detection** of compiler flags, includes and libraries via `pkg-config` and platform-specific package managers.
 * **Incremental compilation** — only recompiles changed source files.
-* **Profile-guided optimization** — `oh rec` collects profiling data, subsequent builds use it.
+* **Profile-guided optimization** — `slay rec` collects profiling data, subsequent builds use it.
 * Built-in support for testing, debugging, cross-compilation, and code generation.
 * Meant for building **executables**, not libraries.
 * Generated `CMakeLists.txt` is specific to the system it was generated on.
@@ -417,5 +417,5 @@ In both cases, a GCC or Clang compiler must be available on PATH.
 ## General Info
 
 * License: BSD-3
-* Version: 1.1.0
+* Version: 1.2.0
 * Author: Alexander F. Rødseth &lt;xyproto@archlinux.org&gt;

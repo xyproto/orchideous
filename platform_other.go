@@ -1,6 +1,6 @@
 //go:build !linux && !darwin && !freebsd && !openbsd && !netbsd && !solaris && !illumos && !windows
 
-package orchideous
+package slay
 
 func isLinux() bool  { return false }
 func isDarwin() bool { return false }

@@ -13,4 +13,4 @@ in C++ without pulling in a heavyweight ECS framework.
 
 ## Build
 
-    orchideous build
+    slay build

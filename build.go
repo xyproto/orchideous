@@ -1,15 +1,14 @@
-package orchideous
+package slay
 
 import (
 	"fmt"
-	"runtime"
-	"sync"
-
 	"github.com/xyproto/files"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"sync"
 )
 
 // BuildOptions holds the configuration for a build.

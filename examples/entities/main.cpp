@@ -1,5 +1,5 @@
 /*
- * Raylib 5 — Bouncing circles with collision explosions
+ * Raylib 5 - Bouncing circles with collision explosions
  *
  * A modern C++ replacement for the old EntityX + SFML2 example.
  * Uses a data-oriented struct-of-arrays layout instead of a
@@ -24,7 +24,7 @@ static float randf(float lo, float hi)
     return lo + static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX) * (hi - lo);
 }
 
-// ── Components stored as parallel vectors (struct-of-arrays) ────────────────
+// Components stored as parallel vectors (struct-of-arrays)
 
 struct Circle {
     Vector2 pos;
@@ -45,13 +45,13 @@ struct Particle {
     float decay; // alpha units lost per second
 };
 
-// ── World state ─────────────────────────────────────────────────────────────
+// World state
 
 static std::vector<Circle> circles;
 static std::vector<Particle> particles;
 static constexpr int TARGET_CIRCLES = 500;
 
-// ── Systems ─────────────────────────────────────────────────────────────────
+// Systems
 
 static void spawn_circles(int screenW, int screenH)
 {
@@ -164,7 +164,7 @@ static void draw_circles()
     }
 }
 
-// ── Main ────────────────────────────────────────────────────────────────────
+// Main
 
 int main()
 {
