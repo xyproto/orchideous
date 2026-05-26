@@ -12,8 +12,8 @@ import (
 
 // Config holds the full configuration for an slay operation.
 type Config struct {
-	BuildOptions
 	SourceDir string // if set, operate in this directory instead of the current one
+	BuildOptions
 }
 
 // NewConfig returns a Config with default settings (standard build).

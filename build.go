@@ -32,11 +32,11 @@ type BuildOptions struct {
 type BuildFlags struct {
 	Compiler       string
 	Std            string
+	ContainerImage string // if set, compile via "docker run" or "podman run" with this image
 	CFlags         []string
 	LDFlags        []string
 	Defines        []string
 	IncPaths       []string
-	ContainerImage string // if set, compile via "docker run" or "podman run" with this image
 }
 
 // assembleFlags creates the full set of build flags for a project.
