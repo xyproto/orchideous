@@ -636,22 +636,38 @@ func doCMakeMake() error {
 	return nil
 }
 
-// doCMakeMakeInstall installs from a cmake+make build.
-func doCMakeMakeInstall() error {
-	if !fileExists("build") {
-		return fmt.Errorf("no build/ directory found (run '%s cmake' or '%s make' first)", ProgName, ProgName)
-	}
+// doMakeInstall runs "make install" from either a plain Makefile or a cmake+make build.
+func doMakeInstall() error {
 	if _, err := exec.LookPath("make"); err != nil {
-		return fmt.Errorf("make not found in PATH")
+		return fmt.Errorf("make not found in PATH\n  hint: %s", installHint("make"))
 	}
-	makeCmd := exec.Command("make", "install", "-C", "build")
-	makeCmd.Stdout = os.Stdout
-	makeCmd.Stderr = os.Stderr
-	return makeCmd.Run()
+	// Prefer plain Makefile in the project root
+	if fileExists("Makefile") {
+		makeCmd := exec.Command("make", "install")
+		makeCmd.Stdout = os.Stdout
+		makeCmd.Stderr = os.Stderr
+		return makeCmd.Run()
+	}
+	// Fall back to cmake+make build directory
+	if fileExists("build") {
+		makeCmd := exec.Command("make", "install", "-C", "build")
+		makeCmd.Stdout = os.Stdout
+		makeCmd.Stderr = os.Stderr
+		return makeCmd.Run()
+	}
+	return fmt.Errorf("no Makefile or build/ directory found (run '%s make' first)", ProgName)
 }
 
-// doCMakeMakeClean cleans a cmake+make build.
-func doCMakeMakeClean() {
+// doMakeClean cleans a make or cmake+make build.
+func doMakeClean() {
+	if fileExists("Makefile") {
+		if _, err := exec.LookPath("make"); err == nil {
+			cmd := exec.Command("make", "clean")
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			_ = cmd.Run()
+		}
+	}
 	if fileExists("build") {
 		os.RemoveAll("build")
 		fmt.Println("Removed build/")
@@ -685,11 +701,11 @@ func doNinjaClean() {
 // removes the build/ directory, and cleans regular build artifacts.
 func doCleanAll() {
 	// Guard against recursive invocation (e.g. Makefile clean target calls "slay clean")
-	if env.Bool("OH_CLEANING") {
+	if env.Bool("SLAY_CLEANING") {
 		cleanFiles()
 		return
 	}
-	os.Setenv("OH_CLEANING", "1")
+	os.Setenv("SLAY_CLEANING", "1")
 
 	// Try make clean if Makefile exists
 	if fileExists("Makefile") {
