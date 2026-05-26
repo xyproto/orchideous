@@ -96,7 +96,7 @@ jobs:
           # SFML 3 is not yet in Ubuntu repos, so skip SFML-based examples
           # raylib and reactphysics3d are not in Ubuntu repos
           # rtaudio: Ubuntu 24.04 ships RtAudio 5, but the example requires RtAudio 6 API
-          skip="bisqwit entities raylib raylib5 reactphysics rtaudio sfml sfml_audio win64crate gles3_sdl3"
+          skip="bisqwit entities raylib raylib5 reactphysics rtaudio sfml sfml_audio win64crate gles3_sdl3 sdl3 glm box2d"
           for d in examples/*/; do
             name=$(basename "$d")
             echo "$skip" | grep -qw "$name" && { printf "=== %-30s SKIP\n" "$d"; continue; }
@@ -131,7 +131,7 @@ jobs:
           pacman --disable-sandbox -Syu --noconfirm
           pacman --disable-sandbox -S --noconfirm --needed \
             base-devel go pkgconf \
-            boost fcgi freeglut glew glfw-x11 glibmm glm glu \
+            boost box2d fcgi freeglut glew glfw-x11 glibmm glm glu \
             gtk4 libconfig libpipewire libx11 openal qt6-base \
             raylib rtaudio sdl2 sdl2_mixer sdl3 sdl3_mixer \
             sfml vte4 vulkan-headers vulkan-icd-loader
