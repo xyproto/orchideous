@@ -1,4 +1,4 @@
-module github.com/xyproto/orchideous
+module github.com/xyproto/slay
 
 go 1.25.1
 
