@@ -30,7 +30,7 @@ The auto-detection of external libraries and headers relies on them being includ
 
 If you like, you can add this shield to your project to indicate that it can be compiled without any particular build-related configuration:
 
-![Compiles with Slay](https://img.shields.io/badge/Compiles_with-Slay-2fc298)
+![Builds with Slay](https://img.shields.io/badge/Builds_with-Slay-2fc298)
 
 Just make sure that it builds with `slay` first, then add this to your `README.md`:
 
