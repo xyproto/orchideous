@@ -479,7 +479,7 @@ func bestStdFlag(compiler string) string {
 			return std
 		}
 	}
-	return "c++17"
+	return "c++20"
 }
 
 // bestCStdFlag returns the best C standard flag the compiler supports.
