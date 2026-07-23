@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"slices"
 
 	. "github.com/xyproto/slay"
 )
@@ -131,12 +132,14 @@ func main() {
 	args := os.Args[1:]
 
 	// Handle -C <dir>
-	if len(args) >= 2 && args[0] == "-C" {
-		if err := os.Chdir(args[1]); err != nil {
+	// Use slices.Index which returns -1 if not found
+	if argpos := slices.Index(args, "-C"); argpos >= 0 && (argpos+1) < len(args) {
+		if err := os.Chdir(args[argpos+1]); err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			os.Exit(1)
 		}
-		args = args[2:]
+		// Delete removes elements from [argpos : argpos+2]
+		args = slices.Delete(args, argpos, argpos+2)
 	}
 
 	// Handle help/version before parsing
