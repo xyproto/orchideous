@@ -8,7 +8,7 @@ import (
 	. "github.com/xyproto/slay"
 )
 
-const versionString = "slay 1.3.2"
+const versionString = "slay 1.3.3"
 
 func printHelp() {
 	fmt.Printf(`%s
