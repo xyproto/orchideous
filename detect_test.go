@@ -171,6 +171,23 @@ func TestContainsMain(t *testing.T) {
 	}
 }
 
+// Flags and external includes may only be visible in the project headers
+func TestDetectProject_ScansProjectHeaders(t *testing.T) {
+	withTempDir(t)
+	writeFile(t, "main.cpp", "#include \"util.h\"\nint main() { return 0; }")
+	writeFile(t, "include/util.h", "#include <experimental/filesystem>\n#include <thread>\n#include <SDL2/SDL.h>\n")
+
+	p := detectProject()
+
+	assertTrue(t, p.HasExperimentalFS, "HasExperimentalFS")
+	assertTrue(t, p.HasThreads, "HasThreads")
+	assertContains(t, p.Includes, "SDL2/SDL.h")
+	// experimental/ headers are part of the standard library, not packages
+	if slices.Contains(p.Includes, "experimental/filesystem") {
+		t.Errorf("experimental/filesystem should not be an external include: %v", p.Includes)
+	}
+}
+
 func TestScanSourceForFlags(t *testing.T) {
 	dir := t.TempDir()
 
@@ -201,6 +218,13 @@ func TestScanSourceForFlags(t *testing.T) {
 			name:    "Filesystem",
 			content: "#include <filesystem>\nint main() {}",
 			check:   func(t *testing.T, p Project) { assertTrue(t, p.HasFS, "HasFS") },
+		},
+		{
+			name:    "ExperimentalFilesystem",
+			content: "#include <experimental/filesystem>\nint main() {}",
+			check: func(t *testing.T, p Project) {
+				assertTrue(t, p.HasExperimentalFS, "HasExperimentalFS")
+			},
 		},
 		{
 			name:    "Math",

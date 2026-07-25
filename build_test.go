@@ -244,6 +244,77 @@ func TestAssembleFlags_LDFLAGS(t *testing.T) {
 	assertFlagPresent(t, flags.LDFlags, "-Wl,-z,relro,-z,now")
 }
 
+func TestAssembleFlags_CPPFLAGS(t *testing.T) {
+	withTempDir(t)
+	writeFile(t, "main.cpp", `int main() { return 0; }`)
+
+	t.Setenv("CPPFLAGS", "-DTEST_CPPFLAG")
+
+	proj := detectProject()
+	flags := assembleFlags(proj, BuildOptions{})
+
+	assertFlagPresent(t, flags.CFlags, "-DTEST_CPPFLAG")
+}
+
+func TestAssembleFlags_UserStd(t *testing.T) {
+	withTempDir(t)
+	writeFile(t, "main.cpp", `int main() { return 0; }`)
+
+	t.Setenv("CXXFLAGS", "-std=c++14 -DTEST_FLAG")
+
+	proj := detectProject()
+	flags := assembleFlags(proj, BuildOptions{})
+
+	if flags.Std != "c++14" {
+		t.Errorf("expected std c++14, got %q", flags.Std)
+	}
+	assertFlagPresent(t, flags.CFlags, "-DTEST_FLAG")
+	assertFlagAbsent(t, flags.CFlags, "-std=c++14")
+}
+
+// C projects fall back to CXXFLAGS, like cxx does, minus the C++-only flags
+func TestUserCompileFlags_CFallback(t *testing.T) {
+	t.Setenv("CXXFLAGS", "-std=c++20 -fno-rtti -DTEST_FLAG")
+
+	flags, std := userCompileFlags(true)
+
+	if std != "" {
+		t.Errorf("expected no std, got %q", std)
+	}
+	assertFlagPresent(t, flags, "-DTEST_FLAG")
+	assertFlagAbsent(t, flags, "-fno-rtti")
+}
+
+// Unstable flags would trigger needless rebuilds
+func TestDirDefines_Stable(t *testing.T) {
+	withTempDir(t)
+	for _, dir := range []string{"img", "data", "shaders", "res", "scripts"} {
+		os.Mkdir(dir, 0o755)
+	}
+
+	first := dirDefines()
+	for range 5 {
+		if got := dirDefines(); !slices.Equal(got, first) {
+			t.Fatalf("dirDefines() is not stable: %v != %v", got, first)
+		}
+	}
+}
+
+func TestSanitizeFlags(t *testing.T) {
+	// A broken .pc file can emit "-L" with no path, swallowing the next flag
+	got := sanitizeFlags([]string{"-I/does/not/exist", "-L", "-lffts", "-lm"})
+	want := []string{"-lffts", "-lm"}
+	if !slices.Equal(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+	// A separated path is joined with its flag
+	got = sanitizeFlags([]string{"-I", os.TempDir()})
+	want = []string{"-I" + os.TempDir()}
+	if !slices.Equal(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
 func TestBuildCompileArgs(t *testing.T) {
 	flags := BuildFlags{
 		Compiler: "g++",
