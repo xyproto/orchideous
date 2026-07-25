@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"strings"
 
+	"github.com/xyproto/env/v2"
 	. "github.com/xyproto/slay"
 )
 
@@ -57,6 +59,16 @@ Compound actions:
   makeinstall   - install from make/cmake+make build
   makeclean     - clean make/cmake+make build
 
+Environment variables:
+  CC, CXX     - the C and C++ compiler to use
+  CFLAGS      - extra flags when compiling C
+  CXXFLAGS    - extra flags when compiling C++
+  CPPFLAGS    - extra flags for both C and C++
+  LDFLAGS     - extra flags when linking
+
+Modifiers and variables can also be given the cxx way, as "name=value",
+like "strict=1", "std=c++17", "CXX=clang++" or "CXXFLAGS=-O0 -g".
+
 Examples:
   slay                  - standard build
   slay clang            - build with clang
@@ -66,6 +78,7 @@ Examples:
   slay clang debug      - clang debug build and launch debugger
   slay opt run          - optimized build and run
   slay small win64      - size-optimized cross-compile for Windows
+  slay std=c++17        - build with a specific C++ standard
   slay -C <dir> ...    - run in the given directory
 `, versionString)
 }
@@ -128,6 +141,75 @@ func expandLegacy(word string) []string {
 	return nil
 }
 
+// isVariableName returns true if the word can be an environment variable name.
+func isVariableName(word string) bool {
+	if word == "" {
+		return false
+	}
+	for i, r := range word {
+		letter := r == '_' || (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z')
+		if !letter && !(i > 0 && r >= '0' && r <= '9') {
+			return false
+		}
+	}
+	return true
+}
+
+// appendEnvFlags appends a flag to an environment variable, like CXXFLAGS.
+func appendEnvFlags(name, flag string) {
+	if existing := os.Getenv(name); existing != "" {
+		flag = existing + " " + flag
+	}
+	os.Setenv(name, flag)
+}
+
+// applyAssignment handles a cxx-style "NAME=value" argument, either by setting
+// an environment variable or by returning the equivalent slay modifier tokens.
+func applyAssignment(name, value string) []string {
+	enabled := value != "" && value != "0"
+	switch name {
+	case "clang", "zap", "opt", "strict", "sloppy", "small", "tiny", "win64", "win", "nosan":
+		if enabled {
+			return []string{name}
+		}
+	case "debug":
+		// "debug=1" is a debug build, while the "debug" action starts a debugger
+		if enabled {
+			return []string{"debug", "build"}
+		}
+	case "std":
+		if strings.HasPrefix(value, "c++") || strings.HasPrefix(value, "gnu++") {
+			appendEnvFlags("CXXFLAGS", "-std="+value)
+		} else {
+			appendEnvFlags("CFLAGS", "-std="+value)
+		}
+	default:
+		// CFLAGS, CXXFLAGS, CC, CXX, PREFIX, DESTDIR, pkgdir and friends
+		os.Setenv(name, value)
+	}
+	return nil
+}
+
+// extractAssignments converts cxx-style "NAME=value" arguments into modifier
+// tokens and environment variables. Arguments that follow an action which takes
+// trailing arguments are left alone, since they belong to the executable.
+func extractAssignments(args []string) []string {
+	var modifiers, rest []string
+	for i, arg := range args {
+		name, value, isAssignment := strings.Cut(arg, "=")
+		if !isAssignment || !isVariableName(name) {
+			rest = append(rest, arg)
+			if arg == "run" || arg == "pgo" || arg == "rec" {
+				rest = append(rest, args[i+1:]...)
+				break
+			}
+			continue
+		}
+		modifiers = append(modifiers, applyAssignment(name, value)...)
+	}
+	return append(modifiers, rest...)
+}
+
 func main() {
 	args := os.Args[1:]
 
@@ -141,6 +223,10 @@ func main() {
 		// Delete removes elements from [argpos : argpos+2]
 		args = slices.Delete(args, argpos, argpos+2)
 	}
+
+	// Handle cxx-style arguments like "std=c++17" or "CXXFLAGS=-O0 -g"
+	args = extractAssignments(args)
+	env.Load() // pick up any environment variables that were just set
 
 	// Handle help/version before parsing
 	if len(args) > 0 {
